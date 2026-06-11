@@ -32,6 +32,7 @@ export const GAME_CONFIG = {
   camera: {
     height: 90,
     orthoSize: 68,
+    mobileOrthoSize: 128,
     followSharpness: 5.5
   }
 } as const;

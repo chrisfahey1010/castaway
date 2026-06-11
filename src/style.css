@@ -53,6 +53,14 @@ body {
 .status-panel {
   min-width: 260px;
   padding: 14px 16px;
+  pointer-events: auto;
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .zone {
@@ -68,27 +76,64 @@ body {
   font-weight: 700;
 }
 
+.prompt.hidden {
+  display: none;
+}
+
 .subtle {
   margin-top: 7px;
   color: rgba(247, 251, 255, 0.78);
   font-size: 13px;
 }
 
-.line-selector {
+.status-controls {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   margin-top: 12px;
+}
+
+.line-selector {
+  position: relative;
+  display: inline-block;
   pointer-events: auto;
 }
 
+.status-actions {
+  display: none;
+  gap: 6px;
+}
+
+.line-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 4;
+  display: none;
+  min-width: 160px;
+  padding: 8px;
+  border: 1px solid rgba(184, 239, 255, 0.22);
+  border-radius: 16px;
+  background: rgba(4, 31, 46, 0.92);
+  box-shadow: 0 14px 30px rgba(0, 14, 26, 0.32);
+  backdrop-filter: blur(14px);
+}
+
+.line-selector.open .line-menu {
+  display: grid;
+  gap: 6px;
+}
+
 .line-option {
+  width: 100%;
   padding: 7px 10px;
   background: rgba(255, 255, 255, 0.14);
   color: #f7fbff;
   border: 1px solid rgba(184, 239, 255, 0.2);
   box-shadow: none;
   font-size: 12px;
+  text-align: left;
 }
 
 .line-option.selected {
@@ -113,9 +158,77 @@ button {
   box-shadow: 0 8px 24px rgba(0, 20, 30, 0.25);
 }
 
+.icon-button {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.line-select-button {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.mobile-controls {
+  position: absolute;
+  left: 18px;
+  bottom: 158px;
+  display: none;
+  grid-template-columns: repeat(3, 48px);
+  grid-template-rows: repeat(3, 48px);
+  gap: 6px;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.move-button {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(184, 239, 255, 0.28);
+  background: rgba(4, 31, 46, 0.74);
+  color: #f7fbff;
+  font-size: 24px;
+  line-height: 1;
+  box-shadow: 0 10px 22px rgba(0, 20, 30, 0.24);
+  user-select: none;
+}
+
+.move-button.active {
+  background: rgba(255, 247, 194, 0.94);
+  color: #123247;
+}
+
+.move-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.move-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.move-down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.move-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
 .meters {
   align-self: end;
+  justify-self: center;
   width: min(420px, calc(100vw - 36px));
+  box-sizing: border-box;
   padding: 14px;
 }
 
@@ -164,6 +277,34 @@ button {
   text-align: center;
   opacity: 0;
   transition: opacity 160ms ease;
+}
+
+.help-card {
+  position: absolute;
+  top: 76px;
+  left: 18px;
+  width: min(360px, calc(100vw - 36px));
+  box-sizing: border-box;
+  display: none;
+  padding: 16px;
+  overflow: auto;
+  pointer-events: auto;
+}
+
+.help-card.visible {
+  display: block;
+}
+
+.help-card h2 {
+  margin: 0 34px 10px 0;
+  font-size: 19px;
+}
+
+.help-card p {
+  margin: 8px 0 0;
+  color: rgba(247, 251, 255, 0.84);
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 .catch-card.visible {
@@ -226,12 +367,27 @@ button {
   display: none;
 }
 
+.drawer-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.14);
+  color: #f7fbff;
+  border: 1px solid rgba(184, 239, 255, 0.22);
+  box-shadow: none;
+}
+
 .drawer.visible {
   display: block;
 }
 
 .drawer h2 {
-  margin: 0 0 12px;
+  margin: 0 38px 12px 0;
   font-size: 19px;
 }
 
@@ -251,19 +407,177 @@ button {
 
 @media (max-width: 680px) {
   .hud {
-    padding: 12px;
+    padding: 10px;
   }
 
   .hud-top {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .buttons {
+    flex-wrap: wrap;
     justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .buttons button {
+    padding: 8px 11px;
+    font-size: 13px;
   }
 
   .status-panel {
+    flex: 1 1 220px;
     min-width: 0;
+    max-width: min(260px, calc(100vw - 20px));
+    padding: 9px 11px;
+    border-radius: 14px;
+  }
+
+  .zone {
+    font-size: 11px;
+    letter-spacing: 0.09em;
+  }
+
+  .prompt {
+    margin-top: 5px;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .subtle {
+    margin-top: 5px;
+    font-size: 12px;
+  }
+
+  .status-controls {
+    margin-top: 8px;
+  }
+
+  .status-actions {
+    display: flex;
+  }
+
+  .status-actions button,
+  .line-select-button {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .hud-top > .buttons {
+    display: none;
+  }
+
+  .line-menu {
+    min-width: 148px;
+  }
+
+  .meters {
+    width: min(340px, calc(100vw - 20px));
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .meter-row {
+    margin-top: 8px;
+  }
+
+  .meter-label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .meter {
+    height: 10px;
+  }
+
+  .mobile-controls {
+    display: grid;
+    left: 12px;
+    bottom: 140px;
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 44px);
+    gap: 5px;
+  }
+
+  .move-button {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+  .drawer,
+  .help-card {
+    top: 82px;
+    width: min(340px, calc(100vw - 20px));
+    max-height: min(58vh, 430px);
+    padding: 13px;
+    border-radius: 16px;
+  }
+
+  .drawer {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+
+  .help-card {
+    right: 10px;
+    left: auto;
+  }
+
+  .drawer h2,
+  .help-card h2 {
+    font-size: 17px;
+  }
+
+  .help-card p {
+    font-size: 13px;
+  }
+
+  .list-item {
+    padding: 8px;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .toasts {
+    right: 10px;
+    bottom: 136px;
+  }
+
+  .catch-card {
+    width: min(270px, calc(100vw - 36px));
+    box-sizing: border-box;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .catch-title {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+  }
+
+  .catch-name {
+    margin-top: 8px;
+    font-size: 22px;
+  }
+
+  .catch-sprite {
+    width: min(140px, 54vw);
+    max-height: 92px;
+    margin-top: 8px;
+  }
+
+  .catch-meta {
+    margin-top: 5px;
+    font-size: 12px;
+  }
+}
+
+@media (pointer: coarse) {
+  .mobile-controls {
+    display: grid;
   }
 }

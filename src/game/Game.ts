@@ -56,7 +56,7 @@ export class Game {
     if (!hudRoot) {
       throw new Error("Missing #hud-root element");
     }
-    this.hud = new Hud(hudRoot, (lineId) => this.selectLine(lineId));
+    this.hud = new Hud(hudRoot, (lineId) => this.selectLine(lineId), (controls) => this.input.setTouchControls(controls));
     this.input.attach();
     window.addEventListener("resize", this.resize);
   }

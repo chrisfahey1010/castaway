@@ -1,9 +1,9 @@
 import type { FishingSnapshot } from "../fishing/FishingSystem";
 
-export function promptForFishing(snapshot: FishingSnapshot): string {
+export function promptForFishing(snapshot: FishingSnapshot, isMobile = false): string {
   switch (snapshot.state) {
     case "idle":
-      return "Move with WASD. Aim with mouse. Hold click or Space to cast.";
+      return isMobile ? "Tap water to cast. Hold to reel." : "Move with WASD. Aim with mouse. Hold click or Space to cast.";
     case "chargingCast":
       return "Release to cast.";
     case "casting":
@@ -11,7 +11,7 @@ export function promptForFishing(snapshot: FishingSnapshot): string {
     case "waitingForBite":
       return "Waiting for a bite...";
     case "biteWindow":
-      return "BITE! Click or press Space now!";
+      return isMobile ? "BITE! Tap now!" : "BITE! Click or press Space now!";
     case "reeling":
       return "Hold to reel. Steer toward the bobber to ease tension.";
     case "caught":

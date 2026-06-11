@@ -5,6 +5,11 @@ import type { Scene } from "@babylonjs/core/scene";
 import { KeyboardInput } from "./KeyboardInput";
 import { PointerInput } from "./PointerInput";
 
+export interface RaftControlInput {
+  throttle: number;
+  turn: number;
+}
+
 export class InputManager {
   readonly keyboard = new KeyboardInput();
   readonly pointer: PointerInput;
@@ -13,6 +18,7 @@ export class InputManager {
   private spaceWasDown = false;
   spacePressed = false;
   spaceReleased = false;
+  private touchControls: RaftControlInput = { throttle: 0, turn: 0 };
 
   constructor(canvas: HTMLCanvasElement) {
     this.pointer = new PointerInput(canvas);
@@ -40,11 +46,26 @@ export class InputManager {
   }
 
   get movementAxis(): { x: number; z: number } {
-    return this.keyboard.axis();
+    const keyboardAxis = this.keyboard.axis();
+    return {
+      x: clampAxis(keyboardAxis.x + this.touchControls.turn),
+      z: clampAxis(keyboardAxis.z - this.touchControls.throttle)
+    };
   }
 
-  get raftControls(): { throttle: number; turn: number } {
-    return this.keyboard.raftControls();
+  get raftControls(): RaftControlInput {
+    const keyboardControls = this.keyboard.raftControls();
+    return {
+      throttle: clampAxis(keyboardControls.throttle + this.touchControls.throttle),
+      turn: clampAxis(keyboardControls.turn + this.touchControls.turn)
+    };
+  }
+
+  setTouchControls(controls: RaftControlInput): void {
+    this.touchControls = {
+      throttle: clampAxis(controls.throttle),
+      turn: clampAxis(controls.turn)
+    };
   }
 
   get interactDown(): boolean {
@@ -64,4 +85,8 @@ export class InputManager {
     this.spacePressed = false;
     this.spaceReleased = false;
   }
+}
+
+function clampAxis(value: number): number {
+  return Math.max(-1, Math.min(1, value));
 }

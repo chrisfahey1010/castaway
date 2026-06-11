@@ -4,6 +4,8 @@ import { GAME_CONFIG } from "../constants";
 import { smoothDampFactor } from "../utils/math";
 
 export class CameraController {
+  private readonly mobileViewport = window.matchMedia("(pointer: coarse), (max-width: 680px)");
+
   constructor(private readonly camera: FreeCamera, private readonly canvas: HTMLCanvasElement) {
     this.resize();
   }
@@ -17,7 +19,8 @@ export class CameraController {
 
   resize(): void {
     const aspect = this.canvas.clientWidth / Math.max(1, this.canvas.clientHeight);
-    const halfHeight = GAME_CONFIG.camera.orthoSize / 2;
+    const orthoSize = this.mobileViewport.matches ? GAME_CONFIG.camera.mobileOrthoSize : GAME_CONFIG.camera.orthoSize;
+    const halfHeight = orthoSize / 2;
     const halfWidth = halfHeight * aspect;
     this.camera.orthoTop = halfHeight;
     this.camera.orthoBottom = -halfHeight;
