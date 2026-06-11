@@ -90,7 +90,7 @@ export class Hud {
           </div>
           <div class="meter-row">
             <div class="meter-label"><span>Reel Progress</span><span data-progress-text>0%</span></div>
-            <div class="meter"><div class="meter-fill" data-progress></div></div>
+            <div class="meter"><div class="meter-fill progress" data-progress></div></div>
           </div>
         </div>
       </div>
@@ -157,8 +157,8 @@ export class Hud {
     this.promptEl.classList.toggle("hidden", prompt.length === 0);
     this.subtleEl.textContent = `${state.rod.name} · ${state.line.name}${state.fishing.hookedFishName ? ` · ${state.fishing.hookedFishName}` : ""}`;
     this.updateLineOptions(state.lines, state.line);
-    this.setMeter(this.powerFill, "[data-power-text]", state.fishing.castPower);
-    this.setMeter(this.tensionFill, "[data-tension-text]", state.fishing.tension / (state.rod.tensionLimit * state.line.tensionLimitMultiplier));
+    this.setMeter(this.powerFill, "[data-power-text]", state.fishing.castPower, true);
+    this.setMeter(this.tensionFill, "[data-tension-text]", state.fishing.tension / (state.rod.tensionLimit * state.line.tensionLimitMultiplier), true);
     this.setMeter(this.progressFill, "[data-progress-text]", state.fishing.reelProgress);
     const inventoryHtml = `<button type="button" class="drawer-close" data-drawer-close aria-label="Close inventory">x</button><h2>Inventory</h2>${renderInventory(state.inventory)}`;
     if (inventoryHtml !== this.inventoryHtml) {
@@ -193,9 +193,14 @@ export class Hud {
     this.catchHideTimer = window.setTimeout(() => this.catchCard.classList.remove("visible"), 3200);
   }
 
-  private setMeter(fill: HTMLElement, labelSelector: string, value: number): void {
+  private setMeter(fill: HTMLElement, labelSelector: string, value: number, preserveGradientRange = false): void {
     const percent = Math.round(Math.max(0, Math.min(1, value)) * 100);
-    fill.style.width = `${percent}%`;
+    if (preserveGradientRange) {
+      fill.style.width = `${percent}%`;
+      fill.style.backgroundSize = percent > 0 ? `${10000 / percent}% 100%` : "100% 100%";
+    } else {
+      fill.style.width = `${percent}%`;
+    }
     const label = this.root.querySelector<HTMLElement>(labelSelector);
     if (label) {
       label.textContent = `${percent}%`;

@@ -260,11 +260,21 @@ button {
   width: 0%;
   border-radius: inherit;
   background: linear-gradient(90deg, #70f1ff, #fff39a);
-  transition: width 90ms linear;
+  transition:
+    width 90ms linear,
+    background-size 90ms linear;
 }
 
 .meter-fill.tension {
   background: linear-gradient(90deg, #72f7a7, #ffe86b, #ff5c68);
+  background-position: left center;
+  transition:
+    width 90ms linear,
+    background-size 90ms linear;
+}
+
+.meter-fill.progress {
+  background: #70f1ff;
 }
 
 .catch-card {
