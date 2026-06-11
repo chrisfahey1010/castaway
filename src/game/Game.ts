@@ -53,6 +53,7 @@ export class Game {
       grass: assets.getTexture("grass"),
       coral: assets.getTexture("coral"),
       rock: assets.getTexture("rock"),
+      fishShadow: assets.getTexture("fishShadow"),
       waterShallow: assets.getTexture("waterShallow"),
       waterMedium: assets.getTexture("waterMedium"),
       waterDeep: assets.getTexture("waterDeep")

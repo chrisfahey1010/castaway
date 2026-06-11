@@ -24,10 +24,14 @@ interface TimedMesh {
 
 interface FishShadow {
   mesh: Mesh;
-  center: Vector3;
   speed: number;
-  phase: number;
-  radius: number;
+  targetSpeed: number;
+  acceleration: number;
+  heading: number;
+  turnRate: number;
+  targetTurnRate: number;
+  turnTimer: number;
+  speedTimer: number;
 }
 
 interface ObstacleVisual {
@@ -38,6 +42,35 @@ interface ObstacleVisual {
 }
 
 let obstacleBlendShadersRegistered = false;
+
+const SHARK_MIN_RADIUS = GAME_CONFIG.world.shallowRadius + 2;
+const SHARK_MAX_RADIUS = GAME_CONFIG.world.deepRadius - 10;
+const SHARK_BOUNDARY_TURN_MARGIN = 10;
+const SHARK_MAX_TURN_RATE = 0.7;
+const SHARK_TURN_ACCELERATION = 1.1;
+const SHARK_CRAWL_SPEED = 0.35;
+const SHARK_MAX_SPEED = 3.4;
+const SHARK_MAX_SCALE = 1.35 * 1.5;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function approach(current: number, target: number, maxDelta: number): number {
+  if (current < target) {
+    return Math.min(target, current + maxDelta);
+  }
+
+  return Math.max(target, current - maxDelta);
+}
+
+function normalizeAngle(angle: number): number {
+  return Math.atan2(Math.sin(angle), Math.cos(angle));
+}
+
+function randomSharkSpeed(): number {
+  return Math.random() < 0.22 ? randomRange(SHARK_CRAWL_SPEED, 0.75) : randomRange(1.45, SHARK_MAX_SPEED);
+}
 
 function registerObstacleBlendShaders(): void {
   if (obstacleBlendShadersRegistered) {
@@ -104,6 +137,7 @@ export interface WorldTextures {
   grass?: Texture;
   coral?: Texture;
   rock?: Texture;
+  fishShadow?: Texture;
   waterShallow?: Texture;
   waterMedium?: Texture;
   waterDeep?: Texture;
@@ -129,7 +163,7 @@ export class World {
       grass: textures.grass
     });
     this.obstacles.push(...this.island.obstacles, ...this.createRocksAndCoral(scene, textures));
-    this.createFishShadows(scene);
+    this.createFishShadows(scene, textures.fishShadow);
   }
 
   update(deltaSeconds: number): void {
@@ -286,22 +320,54 @@ export class World {
     patch.material = material;
   }
 
-  private createFishShadows(scene: Scene): void {
+  private createFishShadows(scene: Scene, texture?: Texture): void {
     const material = new StandardMaterial("fish-shadow-material", scene);
     material.diffuseColor = new Color3(0.02, 0.08, 0.12);
     material.emissiveColor = new Color3(0, 0.03, 0.05);
     material.specularColor = new Color3(0, 0, 0);
-    material.alpha = 0.28;
+    material.alpha = texture ? 0.22 : 0.2;
+    material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+
+    if (texture) {
+      texture.hasAlpha = true;
+      material.diffuseTexture = texture;
+      material.opacityTexture = texture;
+      material.useAlphaFromDiffuseTexture = true;
+      material.backFaceCulling = false;
+    }
 
     for (let i = 0; i < 18; i += 1) {
-      const radius = randomRange(GAME_CONFIG.world.shallowRadius + 4, GAME_CONFIG.world.deepRadius - 10);
+      const radius = randomRange(SHARK_MIN_RADIUS, SHARK_MAX_RADIUS);
       const angle = randomRange(0, Math.PI * 2);
       const center = new Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
-      const mesh = MeshBuilder.CreateSphere(`fish-shadow-${i}`, { diameterX: randomRange(1.8, 4.2), diameterY: 0.08, diameterZ: randomRange(0.55, 1.1), segments: 10 }, scene);
+      const sharkLength = 4.3;
+      const sharkWidth = sharkLength * (218 / 512);
+      const mesh = texture
+        ? MeshBuilder.CreateGround(`fish-shadow-${i}`, { width: sharkWidth, height: sharkLength, subdivisions: 1 }, scene)
+        : MeshBuilder.CreateSphere(
+            `fish-shadow-${i}`,
+            { diameterX: randomRange(1.8, 4.2), diameterY: 0.08, diameterZ: randomRange(0.55, 1.1), segments: 10 },
+            scene
+          );
+      const scale = randomRange(0.65, SHARK_MAX_SCALE);
+      mesh.scaling = new Vector3(scale, 1, scale);
       mesh.position = center.clone();
       mesh.position.y = 0.03;
       mesh.material = material;
-      this.fishShadows.push({ mesh, center, speed: randomRange(0.25, 0.85), phase: randomRange(0, Math.PI * 2), radius: randomRange(3, 9) });
+      const heading = randomRange(0, Math.PI * 2);
+      const speed = randomSharkSpeed();
+      mesh.rotation.y = heading;
+      this.fishShadows.push({
+        mesh,
+        speed,
+        targetSpeed: speed,
+        acceleration: randomRange(0.55, 1.15),
+        heading,
+        turnRate: 0,
+        targetTurnRate: randomRange(-SHARK_MAX_TURN_RATE, SHARK_MAX_TURN_RATE),
+        turnTimer: randomRange(0.8, 2.4),
+        speedTimer: randomRange(1.4, 4.8)
+      });
     }
   }
 
@@ -325,10 +391,45 @@ export class World {
 
   private updateFishShadows(deltaSeconds: number): void {
     for (const shadow of this.fishShadows) {
-      shadow.phase += deltaSeconds * shadow.speed;
-      shadow.mesh.position.x = shadow.center.x + Math.cos(shadow.phase) * shadow.radius;
-      shadow.mesh.position.z = shadow.center.z + Math.sin(shadow.phase * 0.74) * shadow.radius * 0.55;
-      shadow.mesh.rotation.y = Math.atan2(Math.cos(shadow.phase * 0.74), -Math.sin(shadow.phase));
+      shadow.turnTimer -= deltaSeconds;
+      if (shadow.turnTimer <= 0) {
+        shadow.targetTurnRate = randomRange(-SHARK_MAX_TURN_RATE, SHARK_MAX_TURN_RATE);
+        shadow.turnTimer = randomRange(0.8, 2.6);
+      }
+
+      shadow.speedTimer -= deltaSeconds;
+      if (shadow.speedTimer <= 0) {
+        shadow.targetSpeed = randomSharkSpeed();
+        shadow.speedTimer = randomRange(1.4, 4.8);
+      }
+
+      const distanceFromCenter = Math.hypot(shadow.mesh.position.x, shadow.mesh.position.z);
+      if (distanceFromCenter < SHARK_MIN_RADIUS + SHARK_BOUNDARY_TURN_MARGIN || distanceFromCenter > SHARK_MAX_RADIUS - SHARK_BOUNDARY_TURN_MARGIN) {
+        const targetHeading = distanceFromCenter < SHARK_MIN_RADIUS + SHARK_BOUNDARY_TURN_MARGIN
+          ? Math.atan2(shadow.mesh.position.x, shadow.mesh.position.z)
+          : Math.atan2(-shadow.mesh.position.x, -shadow.mesh.position.z);
+        const headingDelta = normalizeAngle(targetHeading - shadow.heading);
+        shadow.targetTurnRate = clamp(headingDelta * 1.2, -SHARK_MAX_TURN_RATE, SHARK_MAX_TURN_RATE);
+
+        if (distanceFromCenter < SHARK_MIN_RADIUS + SHARK_BOUNDARY_TURN_MARGIN) {
+          shadow.targetSpeed = Math.min(shadow.targetSpeed, 1.1);
+        }
+      }
+
+      shadow.turnRate = approach(shadow.turnRate, shadow.targetTurnRate, SHARK_TURN_ACCELERATION * deltaSeconds);
+      shadow.speed = approach(shadow.speed, shadow.targetSpeed, shadow.acceleration * deltaSeconds);
+      shadow.heading = normalizeAngle(shadow.heading + shadow.turnRate * deltaSeconds);
+      shadow.mesh.rotation.y = shadow.heading;
+      shadow.mesh.position.x += Math.sin(shadow.heading) * shadow.speed * deltaSeconds;
+      shadow.mesh.position.z += Math.cos(shadow.heading) * shadow.speed * deltaSeconds;
+
+      const nextDistanceFromCenter = Math.hypot(shadow.mesh.position.x, shadow.mesh.position.z);
+      if (nextDistanceFromCenter < SHARK_MIN_RADIUS || nextDistanceFromCenter > SHARK_MAX_RADIUS) {
+        const clampedDistance = clamp(nextDistanceFromCenter, SHARK_MIN_RADIUS, SHARK_MAX_RADIUS);
+        const correctionScale = clampedDistance / nextDistanceFromCenter;
+        shadow.mesh.position.x *= correctionScale;
+        shadow.mesh.position.z *= correctionScale;
+      }
     }
   }
 }
