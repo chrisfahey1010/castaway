@@ -51,7 +51,7 @@ export class Hud {
         <div class="hud-top">
           <div class="panel status-panel">
             <div class="status-header">
-              <div class="zone" data-zone>Shallow Lagoon</div>
+              <div class="zone" data-zone>Shallows</div>
               <button type="button" class="icon-button" data-help-toggle aria-label="Show instructions">?</button>
             </div>
             <div class="prompt" data-prompt>Loading...</div>

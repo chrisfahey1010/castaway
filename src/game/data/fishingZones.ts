@@ -21,7 +21,7 @@ export interface FishingZone {
 export const fishingZones: FishingZone[] = [
   {
     id: "shallow-lagoon",
-    name: "Shallow Lagoon",
+    name: "Shallows",
     type: "lagoon",
     innerRadius: GAME_CONFIG.world.islandRadius,
     radius: GAME_CONFIG.world.shallowRadius,
@@ -36,7 +36,7 @@ export const fishingZones: FishingZone[] = [
   },
   {
     id: "coral-reef",
-    name: "Coral Reef",
+    name: "Reef",
     type: "reef",
     innerRadius: GAME_CONFIG.world.shallowRadius,
     radius: GAME_CONFIG.world.reefRadius,
@@ -54,7 +54,7 @@ export const fishingZones: FishingZone[] = [
   },
   {
     id: "open-blue",
-    name: "Open Blue",
+    name: "Ocean",
     type: "deep",
     innerRadius: GAME_CONFIG.world.reefRadius,
     radius: GAME_CONFIG.world.deepRadius,

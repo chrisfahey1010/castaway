@@ -278,9 +278,9 @@ Recommended starting map:
              Deep Water
       ~~~~~~~~~~~~~~~~~~~~~
    ~~~~~~~~ Reef Zone ~~~~~~~~
-  ~~~~~ Shallow Lagoon ~~~~~~~~
+  ~~~~~~~~ Shallows ~~~~~~~~~~~
   ~~~~      Island       ~~~~~~
-  ~~~~~ Shallow Lagoon ~~~~~~~~
+  ~~~~~~~~ Shallows ~~~~~~~~~~~
    ~~~~~~~~ Reef Zone ~~~~~~~~
       ~~~~~~~~~~~~~~~~~~~~~
 ```
