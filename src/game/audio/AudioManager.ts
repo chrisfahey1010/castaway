@@ -1,3 +1,5 @@
+import { assetManifest } from "../assets/assetManifest";
+
 type SoundKey = "cast" | "splash" | "bite" | "reel" | "catchSuccess" | "escape" | "ui";
 
 const tones: Record<SoundKey, { frequency: number; duration: number; type: OscillatorType }> = {
@@ -10,11 +12,24 @@ const tones: Record<SoundKey, { frequency: number; duration: number; type: Oscil
   ui: { frequency: 520, duration: 0.05, type: "triangle" }
 };
 
+const fileSounds: Partial<Record<SoundKey, string>> = {
+  cast: assetManifest.audio.cast,
+  reel: assetManifest.audio.reel
+};
+
 export class AudioManager {
   private context: AudioContext | null = null;
+  private readonly clips = new Map<SoundKey, HTMLAudioElement>();
+  private readonly loops = new Map<SoundKey, HTMLAudioElement>();
   volume = 0.45;
 
   play(key: SoundKey): void {
+    const file = fileSounds[key];
+    if (file) {
+      this.playFile(key, file);
+      return;
+    }
+
     const tone = tones[key];
     const context = this.getContext();
     if (!context) {
@@ -33,12 +48,58 @@ export class AudioManager {
     oscillator.stop(context.currentTime + tone.duration);
   }
 
-  playLoop(_key: string): void {
-    return;
+  playLoop(key: SoundKey): void {
+    const file = fileSounds[key];
+    if (!file) {
+      return;
+    }
+
+    const audio = this.getAudioElement(this.loops, key, file);
+    audio.loop = true;
+    audio.volume = this.volume;
+
+    if (audio.paused) {
+      void audio.play().catch(() => undefined);
+    }
   }
 
-  stop(_key: string): void {
-    return;
+  stop(key: SoundKey): void {
+    const audio = this.loops.get(key);
+    if (!audio) {
+      return;
+    }
+
+    audio.pause();
+    try {
+      audio.currentTime = 0;
+    } catch {
+      // Some browsers reject seeking before metadata is available.
+    }
+  }
+
+  private playFile(key: SoundKey, file: string): void {
+    const audio = this.getAudioElement(this.clips, key, file);
+    audio.loop = false;
+    audio.volume = this.volume;
+    try {
+      audio.currentTime = 0;
+    } catch {
+      // Some browsers reject seeking before metadata is available.
+    }
+
+    void audio.play().catch(() => undefined);
+  }
+
+  private getAudioElement(collection: Map<SoundKey, HTMLAudioElement>, key: SoundKey, file: string): HTMLAudioElement {
+    const existing = collection.get(key);
+    if (existing) {
+      return existing;
+    }
+
+    const audio = new Audio(file);
+    audio.preload = "auto";
+    collection.set(key, audio);
+    return audio;
   }
 
   private getContext(): AudioContext | null {

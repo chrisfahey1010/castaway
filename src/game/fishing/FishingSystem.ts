@@ -70,7 +70,6 @@ export class FishingSystem {
   private activeFish: FishSpecies | null = null;
   private fightState: FishFightState | null = null;
   private resetTimer = 0;
-  private reelSoundTimer = 0;
   private reelStartPosition = new Vector3(0, 0, 0);
   private lastRaftPosition: Vector3 | null = null;
   private catchQueue: CatchEvent[] = [];
@@ -129,7 +128,6 @@ export class FishingSystem {
     if (input.interactPressed) {
       this.state = "chargingCast";
       this.chargeSeconds = 0;
-      this.audio.play("cast");
     }
   }
 
@@ -149,6 +147,7 @@ export class FishingSystem {
       this.castElapsed = 0;
       this.castTravelSeconds = Math.max(0.25, plan.distance / GAME_CONFIG.fishing.castTravelSpeed);
       this.bobber.show(this.castStart);
+      this.audio.play("cast");
       this.state = "casting";
     }
   }
@@ -234,16 +233,15 @@ export class FishingSystem {
     this.updateReelingBobber(raftPosition);
 
     if (input.interactDown) {
-      this.reelSoundTimer -= deltaSeconds;
-      if (this.reelSoundTimer <= 0) {
-        this.reelSoundTimer = 0.16;
-        this.audio.play("reel");
-      }
+      this.audio.playLoop("reel");
+    } else {
+      this.audio.stop("reel");
     }
 
     if (result === "caught") {
       const caught = this.catchResolver.resolve(this.activeFish, this.activeZone);
       this.catchQueue.push({ caught, species: this.activeFish });
+      this.audio.stop("reel");
       this.audio.play("catchSuccess");
       this.state = "caught";
       this.resetTimer = 1.3;
@@ -275,6 +273,7 @@ export class FishingSystem {
 
   private failCast(message: string): void {
     this.messageQueue.push(message);
+    this.audio.stop("reel");
     this.audio.play("escape");
     this.state = "escaped";
     this.resetTimer = 1.0;
@@ -282,6 +281,7 @@ export class FishingSystem {
 
   private escape(message: string): void {
     this.messageQueue.push(message);
+    this.audio.stop("reel");
     this.audio.play("escape");
     this.state = "escaped";
     this.resetTimer = 1.0;

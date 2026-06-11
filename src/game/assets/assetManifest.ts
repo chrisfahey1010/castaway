@@ -21,7 +21,8 @@ export const assetManifest = {
     }
   },
   audio: {
-    cast: "/assets/audio/cast.mp3",
+    cast: "/assets/sounds/cast.mp3",
+    reel: "/assets/sounds/reel.mp3",
     splash: "/assets/audio/splash.mp3",
     bite: "/assets/audio/bite.mp3",
     catchSuccess: "/assets/audio/catch-success.mp3",
