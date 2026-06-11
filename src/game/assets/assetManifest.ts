@@ -1,6 +1,8 @@
 export const assetManifest = {
   textures: {
+    coral: "/assets/textures/coral.jpg",
     grass: "/assets/textures/grass.jpg",
+    rock: "/assets/textures/rock.jpg",
     sand: "/assets/textures/sand.jpg",
     waterDeep: "/assets/textures/water-deep.jpg",
     waterMedium: "/assets/textures/water-medium.jpg",
