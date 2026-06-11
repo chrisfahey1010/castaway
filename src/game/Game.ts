@@ -47,7 +47,14 @@ export class Game {
     const assets = await this.assetLoader.load();
     this.equippedLine = getFishingLine(this.state.player.equippedLineId);
 
-    this.world = new World(this.sceneBundle.scene, assets.getTexture("palmTree"));
+    this.world = new World(this.sceneBundle.scene, {
+      palm: assets.getTexture("palmTree"),
+      sand: assets.getTexture("sand"),
+      grass: assets.getTexture("grass"),
+      waterShallow: assets.getTexture("waterShallow"),
+      waterMedium: assets.getTexture("waterMedium"),
+      waterDeep: assets.getTexture("waterDeep")
+    });
     this.cameraController = new CameraController(this.sceneBundle.camera, this.canvas);
     const raft = new RaftController(this.sceneBundle.scene, this.state.player.position, assets.getTexture("raft"));
     this.player = new PlayerController(raft);

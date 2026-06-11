@@ -6,7 +6,7 @@ import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import type { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import type { Scene } from "@babylonjs/core/scene";
 import { GAME_CONFIG } from "../constants";
-import { fishingZones, type FishingZone } from "../data/fishingZones";
+import type { FishingZone } from "../data/fishingZones";
 import { randomRange } from "../utils/random";
 import { Island } from "./Island";
 import { Water } from "./Water";
@@ -27,6 +27,15 @@ interface FishShadow {
   radius: number;
 }
 
+export interface WorldTextures {
+  palm?: Texture;
+  sand?: Texture;
+  grass?: Texture;
+  waterShallow?: Texture;
+  waterMedium?: Texture;
+  waterDeep?: Texture;
+}
+
 export class World {
   readonly water: Water;
   readonly island: Island;
@@ -35,10 +44,17 @@ export class World {
   private readonly ripples: TimedMesh[] = [];
   private readonly fishShadows: FishShadow[] = [];
 
-  constructor(private readonly scene: Scene, palmTexture?: Texture) {
-    this.water = new Water(scene);
-    this.createZoneOverlays(scene);
-    this.island = new Island(scene, palmTexture);
+  constructor(private readonly scene: Scene, textures: WorldTextures = {}) {
+    this.water = new Water(scene, {
+      shallow: textures.waterShallow,
+      medium: textures.waterMedium,
+      deep: textures.waterDeep
+    });
+    this.island = new Island(scene, {
+      palm: textures.palm,
+      sand: textures.sand,
+      grass: textures.grass
+    });
     this.obstacles.push(...this.island.obstacles, ...this.createRocksAndCoral(scene));
     this.createFishShadows(scene);
   }
@@ -75,22 +91,6 @@ export class World {
     material.alpha = 0.65;
     ripple.material = material;
     this.ripples.push({ mesh: ripple, age: 0, lifetime: 0.8 });
-  }
-
-  private createZoneOverlays(scene: Scene): void {
-    fishingZones
-      .slice()
-      .reverse()
-      .forEach((zone, index) => {
-        const disc = MeshBuilder.CreateCylinder(`zone-${zone.id}`, { diameter: zone.radius * 2, height: 0.015, tessellation: 96 }, scene);
-        disc.position.y = -0.045 + index * 0.01;
-        const material = new StandardMaterial(`zone-material-${zone.id}`, scene);
-        material.diffuseColor = Color3.FromHexString(zone.colorTint);
-        material.emissiveColor = Color3.FromHexString(zone.colorTint).scale(0.22);
-        material.specularColor = new Color3(0, 0, 0);
-        material.alpha = zone.type === "lagoon" ? 0.32 : zone.type === "reef" ? 0.24 : 0.18;
-        disc.material = material;
-      });
   }
 
   private createRocksAndCoral(scene: Scene): CircleObstacle[] {

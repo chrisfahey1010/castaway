@@ -1,5 +1,10 @@
 export const assetManifest = {
   textures: {
+    grass: "/assets/textures/grass.jpg",
+    sand: "/assets/textures/sand.jpg",
+    waterDeep: "/assets/textures/water-deep.jpg",
+    waterMedium: "/assets/textures/water-medium.jpg",
+    waterShallow: "/assets/textures/water-shallow.jpg",
     waterNormal: "/assets/textures/water-normal.png",
     raft: "/assets/sprites/raft.png",
     palmTree: "/assets/sprites/palmtree.png",
