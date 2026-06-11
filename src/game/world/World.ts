@@ -10,6 +10,7 @@ import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import type { Scene } from "@babylonjs/core/scene";
 import { GAME_CONFIG } from "../constants";
 import type { FishingZone } from "../data/fishingZones";
+import { preventSpriteFrustumCulling } from "../rendering/sprites";
 import { randomRange } from "../utils/random";
 import { Island } from "./Island";
 import { Water } from "./Water";
@@ -354,6 +355,9 @@ export class World {
       mesh.position = center.clone();
       mesh.position.y = 0.03;
       mesh.material = material;
+      if (texture) {
+        preventSpriteFrustumCulling(mesh);
+      }
       const heading = randomRange(0, Math.PI * 2);
       const speed = randomSharkSpeed();
       mesh.rotation.y = heading;

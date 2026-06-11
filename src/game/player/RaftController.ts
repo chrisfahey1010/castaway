@@ -8,6 +8,7 @@ import type { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import type { Scene } from "@babylonjs/core/scene";
 import { GAME_CONFIG } from "../constants";
 import type { InputManager } from "../input/InputManager";
+import { preventSpriteFrustumCulling } from "../rendering/sprites";
 import type { World } from "../world/World";
 
 export class RaftController {
@@ -40,9 +41,9 @@ export class RaftController {
 
     const raftMaterial = new StandardMaterial("raft-sprite-material", scene);
     raftMaterial.diffuseTexture = raftTexture;
-    raftMaterial.opacityTexture = raftTexture;
     raftMaterial.useAlphaFromDiffuseTexture = true;
-    raftMaterial.transparencyMode = Material.MATERIAL_ALPHABLEND;
+    raftMaterial.transparencyMode = Material.MATERIAL_ALPHATEST;
+    raftMaterial.alphaCutOff = 0.08;
     raftMaterial.backFaceCulling = false;
     raftMaterial.specularColor = new Color3(0.08, 0.06, 0.04);
 
@@ -51,6 +52,7 @@ export class RaftController {
     raft.rotation.x = Math.PI / 2;
     raft.position.y = 0.38;
     raft.material = raftMaterial;
+    preventSpriteFrustumCulling(raft);
   }
 
   private createFallbackRaft(scene: Scene): void {

@@ -6,6 +6,7 @@ import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { Scene } from "@babylonjs/core/scene";
+import { preventSpriteFrustumCulling } from "../rendering/sprites";
 
 const BOBBER_SPRITE_HEIGHT = 1.15;
 const BOBBER_SPRITE_WIDTH = BOBBER_SPRITE_HEIGHT * (486 / 586);
@@ -49,9 +50,9 @@ export class Bobber {
     const material = new StandardMaterial("bobber-sprite-material", scene);
     material.diffuseTexture = bobberTexture;
     material.emissiveTexture = bobberTexture;
-    material.opacityTexture = bobberTexture;
     material.useAlphaFromDiffuseTexture = true;
-    material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+    material.transparencyMode = Material.MATERIAL_ALPHATEST;
+    material.alphaCutOff = 0.08;
     material.disableLighting = true;
     material.backFaceCulling = false;
     material.diffuseColor = Color3.White();
@@ -62,6 +63,7 @@ export class Bobber {
     bobber.rotation.x = -Math.PI / 2;
     bobber.renderingGroupId = 1;
     bobber.material = material;
+    preventSpriteFrustumCulling(bobber);
     return bobber;
   }
 

@@ -3,12 +3,13 @@ import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Effect } from "@babylonjs/core/Materials/effect";
 import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
-import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import type { Scene } from "@babylonjs/core/scene";
 import { GAME_CONFIG } from "../constants";
+import { preventSpriteFrustumCulling } from "../rendering/sprites";
 import type { CircleObstacle } from "./Collision";
 
 interface IslandTextures {
@@ -191,18 +192,23 @@ export class Island {
 
       const palmMaterial = new StandardMaterial("palm-tree-sprite-material", scene);
       palmMaterial.diffuseTexture = palmTexture;
-      palmMaterial.opacityTexture = palmTexture;
       palmMaterial.useAlphaFromDiffuseTexture = true;
-      palmMaterial.transparencyMode = Material.MATERIAL_ALPHABLEND;
+      palmMaterial.transparencyMode = Material.MATERIAL_ALPHATEST;
+      palmMaterial.alphaCutOff = 0.08;
+      palmMaterial.disableLighting = true;
+      palmMaterial.emissiveTexture = palmTexture;
+      palmMaterial.diffuseColor = Color3.White();
+      palmMaterial.emissiveColor = Color3.White();
       palmMaterial.backFaceCulling = false;
       palmMaterial.specularColor = new Color3(0, 0, 0);
 
       positions.forEach(({ position, scale, rotation }, index) => {
         const palm = MeshBuilder.CreatePlane(`palm-tree-sprite-${index}`, { width: 7.5 * scale, height: 8.05 * scale }, scene);
         palm.position = new Vector3(position.x, 2.25 + index * 0.03, position.z);
-        palm.billboardMode = Mesh.BILLBOARDMODE_ALL;
+        palm.rotation.x = -Math.PI / 2;
         palm.rotation.z = rotation;
         palm.material = palmMaterial;
+        preventSpriteFrustumCulling(palm);
       });
       return;
     }
