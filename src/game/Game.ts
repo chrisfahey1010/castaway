@@ -60,7 +60,7 @@ export class Game {
       waterDeep: assets.getTexture("waterDeep")
     });
     this.cameraController = new CameraController(this.sceneBundle.camera, this.canvas);
-    const raft = new RaftController(this.sceneBundle.scene, this.state.player.position, assets.getTexture("raft"));
+    const raft = new RaftController(this.sceneBundle.scene, this.state.player.position, assets.getTexture("raft"), assets.getTexture("fisherman"));
     this.player = new PlayerController(raft);
     this.fishing = new FishingSystem(this.sceneBundle.scene, this.audio, assets.getTexture("bobber"));
     const hudRoot = document.querySelector<HTMLElement>("#hud-root");
@@ -95,7 +95,7 @@ export class Game {
     this.player.update(this.input, this.world, deltaSeconds);
     this.world.update(deltaSeconds);
     this.cameraController.update(this.player.raft.root.position, deltaSeconds);
-    this.fishing.update(this.input, this.world, this.player.raft.root.position, this.rod.equipped, this.equippedLine, deltaSeconds);
+    this.fishing.update(this.input, this.world, this.player.raft.root.position, this.player.raft.getFishingLineAnchorPosition(), this.rod.equipped, this.equippedLine, deltaSeconds);
     this.handleFishingEvents();
 
     const zone = this.world.getZoneAt(this.player.raft.root.position);

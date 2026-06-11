@@ -9,6 +9,7 @@ export const assetManifest = {
     waterShallow: "/assets/textures/water-shallow.png",
     waterNormal: "/assets/textures/water-normal.png",
     raft: "/assets/sprites/raft.png",
+    fisherman: "/assets/sprites/fisherman.png",
     palmTree: "/assets/sprites/palmtree.png",
     bobber: "/assets/sprites/bobber.png",
     fishShadow: "/assets/sprites/shark.png",

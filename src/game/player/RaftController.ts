@@ -11,16 +11,24 @@ import type { InputManager } from "../input/InputManager";
 import { preventSpriteFrustumCulling } from "../rendering/sprites";
 import type { World } from "../world/World";
 
+const FISHERMAN_SPRITE_WIDTH = 3.4;
+const FISHERMAN_SPRITE_HEIGHT = 2.6;
+const FISHERMAN_SPRITE_POSITION = new Vector3(0, 0.7, -0.55);
+const FISHING_POLE_TIP_SPRITE_POSITION = new Vector3(FISHERMAN_SPRITE_WIDTH / 2, FISHERMAN_SPRITE_HEIGHT * (0.33 - 0.5), 0);
+
 export class RaftController {
   readonly root: TransformNode;
   readonly collisionRadius = GAME_CONFIG.raft.collisionRadius;
   velocity = new Vector3(0, 0, 0);
   private bobTime = 0;
+  private readonly fishingLineAnchor: TransformNode;
 
-  constructor(scene: Scene, startPosition = new Vector3(0, 0, 34), raftTexture?: Texture) {
+  constructor(scene: Scene, startPosition = new Vector3(0, 0, 34), raftTexture?: Texture, fishermanTexture?: Texture) {
     this.root = new TransformNode("raft-root", scene);
     this.root.position = startPosition.clone();
     this.root.rotation.y = Math.PI;
+    this.fishingLineAnchor = new TransformNode("fishing-line-anchor", scene);
+    this.fishingLineAnchor.parent = this.root;
 
     if (raftTexture) {
       this.createTexturedRaft(scene, raftTexture);
@@ -28,12 +36,47 @@ export class RaftController {
       this.createFallbackRaft(scene);
     }
 
-    const castawayMaterial = new StandardMaterial("castaway-material", scene);
-    castawayMaterial.diffuseColor = new Color3(0.96, 0.78, 0.52);
-    const castaway = MeshBuilder.CreateSphere("castaway", { diameter: 1.1, segments: 12 }, scene);
-    castaway.parent = this.root;
-    castaway.position = new Vector3(0, 0.98, -0.55);
-    castaway.material = castawayMaterial;
+    this.createFisherman(scene, fishermanTexture);
+  }
+
+  getFishingLineAnchorPosition(): Vector3 {
+    this.fishingLineAnchor.computeWorldMatrix(true);
+    return this.fishingLineAnchor.getAbsolutePosition().clone();
+  }
+
+  private createFisherman(scene: Scene, fishermanTexture?: Texture): void {
+    if (!fishermanTexture) {
+      const castawayMaterial = new StandardMaterial("castaway-material", scene);
+      castawayMaterial.diffuseColor = new Color3(0.96, 0.78, 0.52);
+      const castaway = MeshBuilder.CreateSphere("castaway", { diameter: 1.1, segments: 12 }, scene);
+      castaway.parent = this.root;
+      castaway.position = new Vector3(0, 0.98, -0.55);
+      castaway.material = castawayMaterial;
+      this.fishingLineAnchor.parent = this.root;
+      this.fishingLineAnchor.position = new Vector3(0, 1.15, 0);
+      return;
+    }
+
+    fishermanTexture.hasAlpha = true;
+
+    const fishermanMaterial = new StandardMaterial("fisherman-sprite-material", scene);
+    fishermanMaterial.diffuseTexture = fishermanTexture;
+    fishermanMaterial.useAlphaFromDiffuseTexture = true;
+    fishermanMaterial.transparencyMode = Material.MATERIAL_ALPHATEST;
+    fishermanMaterial.alphaCutOff = 0.08;
+    fishermanMaterial.backFaceCulling = false;
+    fishermanMaterial.specularColor = new Color3(0.08, 0.06, 0.04);
+
+    const fisherman = MeshBuilder.CreatePlane("fisherman-sprite", { width: FISHERMAN_SPRITE_WIDTH, height: FISHERMAN_SPRITE_HEIGHT }, scene);
+    fisherman.parent = this.root;
+    fisherman.rotation.x = Math.PI / 2;
+    fisherman.rotation.z = Math.PI;
+    fisherman.position = FISHERMAN_SPRITE_POSITION.clone();
+    fisherman.material = fishermanMaterial;
+    preventSpriteFrustumCulling(fisherman);
+
+    this.fishingLineAnchor.parent = fisherman;
+    this.fishingLineAnchor.position = FISHING_POLE_TIP_SPRITE_POSITION.clone();
   }
 
   private createTexturedRaft(scene: Scene, raftTexture: Texture): void {

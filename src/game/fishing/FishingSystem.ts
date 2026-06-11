@@ -82,7 +82,7 @@ export class FishingSystem {
     this.lineMesh.isVisible = false;
   }
 
-  update(input: InputManager, world: World, raftPosition: Vector3, rod: Rod, line: FishingLine, deltaSeconds: number): void {
+  update(input: InputManager, world: World, raftPosition: Vector3, lineAnchorPosition: Vector3, rod: Rod, line: FishingLine, deltaSeconds: number): void {
     const raftDelta = this.lastRaftPosition ? raftPosition.subtract(this.lastRaftPosition) : Vector3.Zero();
 
     switch (this.state) {
@@ -90,7 +90,7 @@ export class FishingSystem {
         this.updateIdle(input);
         break;
       case "chargingCast":
-        this.updateCharging(input, raftPosition, rod, world, deltaSeconds);
+        this.updateCharging(input, raftPosition, lineAnchorPosition, rod, world, deltaSeconds);
         break;
       case "casting":
         this.updateCasting(world, deltaSeconds);
@@ -110,7 +110,7 @@ export class FishingSystem {
         break;
     }
 
-    this.updateLine(raftPosition, line);
+    this.updateLine(lineAnchorPosition, line);
     this.lastRaftPosition = raftPosition.clone();
     this.updateSnapshot();
   }
@@ -131,7 +131,7 @@ export class FishingSystem {
     }
   }
 
-  private updateCharging(input: InputManager, raftPosition: Vector3, rod: Rod, world: World, deltaSeconds: number): void {
+  private updateCharging(input: InputManager, raftPosition: Vector3, lineAnchorPosition: Vector3, rod: Rod, world: World, deltaSeconds: number): void {
     this.chargeSeconds = Math.min(GAME_CONFIG.fishing.maxChargeSeconds, this.chargeSeconds + deltaSeconds);
     const plan = this.castSystem.planCast(raftPosition, input.pointerWorld, this.chargeSeconds, rod);
     this.castTarget = plan.target;
@@ -142,7 +142,7 @@ export class FishingSystem {
         return;
       }
 
-      this.castStart = new Vector3(raftPosition.x, 1.1, raftPosition.z);
+      this.castStart = lineAnchorPosition.clone();
       this.activeCastDistance = Math.max(GAME_CONFIG.fishing.minCastDistance, plan.distance);
       this.castElapsed = 0;
       this.castTravelSeconds = Math.max(0.25, plan.distance / GAME_CONFIG.fishing.castTravelSpeed);
@@ -287,16 +287,15 @@ export class FishingSystem {
     this.resetTimer = 1.0;
   }
 
-  private updateLine(raftPosition: Vector3, line: FishingLine): void {
+  private updateLine(lineAnchorPosition: Vector3, line: FishingLine): void {
     if (!this.bobber.mesh.isVisible) {
       this.lineMesh.isVisible = false;
       return;
     }
 
-    const playerAnchor = new Vector3(raftPosition.x, raftPosition.y + 1.15, raftPosition.z);
     const bobberAnchor = this.bobber.getLineAnchorPosition();
     this.lineMesh.color = Color3.FromHexString(line.colorHex);
-    MeshBuilder.CreateLines("fishing-line", { points: [playerAnchor, bobberAnchor], instance: this.lineMesh });
+    MeshBuilder.CreateLines("fishing-line", { points: [lineAnchorPosition, bobberAnchor], instance: this.lineMesh });
     this.lineMesh.isVisible = true;
   }
 
