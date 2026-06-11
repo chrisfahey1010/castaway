@@ -11,7 +11,8 @@ export const assetManifest = {
     raft: "/assets/sprites/raft.png",
     palmTree: "/assets/sprites/palmtree.png",
     bobber: "/assets/sprites/bobber.png",
-    fishShadow: "/assets/sprites/shark.png"
+    fishShadow: "/assets/sprites/shark.png",
+    stingrayShadow: "/assets/sprites/stingray.png"
   },
   spritesheets: {
     fish: {
