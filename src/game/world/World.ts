@@ -362,7 +362,7 @@ export class World {
     const shadowTypes = [
       {
         name: "shark",
-        count: 18,
+        count: 12,
         texture: textures.fishShadow,
         minRadius: SHARK_MIN_RADIUS,
         maxRadius: SHARK_MAX_RADIUS,
@@ -374,7 +374,7 @@ export class World {
       },
       {
         name: "stingray",
-        count: 9,
+        count: 6,
         texture: textures.stingrayShadow,
         minRadius: STINGRAY_MIN_RADIUS,
         maxRadius: STINGRAY_MAX_RADIUS,
