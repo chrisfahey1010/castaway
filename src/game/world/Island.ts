@@ -69,7 +69,8 @@ function registerIslandShaders(): void {
     void main(void) {
       vec2 worldPoint = vWorldPosition.xz;
       float sandDistance = islandDistance(worldPoint, sandRadiusX, sandRadiusZ, 0.2);
-      float grassDistance = islandDistance(worldPoint - grassCenter, grassRadiusX, grassRadiusZ, 1.4);
+      vec2 grassPoint = worldPoint - grassCenter;
+      float grassDistance = islandDistance(grassPoint, grassRadiusX, grassRadiusZ, 1.4);
       float islandAlpha = 1.0 - smoothstep(0.985, 1.045, sandDistance);
 
       if (islandAlpha <= 0.01) {
@@ -77,7 +78,7 @@ function registerIslandShaders(): void {
       }
 
       vec2 sandUV = worldPoint * textureScale;
-      vec2 grassUV = (worldPoint - grassCenter) * textureScale * 1.08 + vec2(0.19, -0.11);
+      vec2 grassUV = vec2(grassPoint.x, -grassPoint.y) * textureScale * 1.08 + vec2(0.19, -0.11);
       vec4 sand = texture2D(sandTexture, sandUV);
       vec4 grass = texture2D(grassTexture, grassUV);
       float grassBlend = 1.0 - smoothstep(0.86, 1.09, grassDistance);
