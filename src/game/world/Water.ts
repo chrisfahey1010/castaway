@@ -1,5 +1,4 @@
 import { Color3 } from "@babylonjs/core/Maths/math.color";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Effect } from "@babylonjs/core/Materials/effect";
 import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
@@ -101,18 +100,6 @@ export class Water {
     this.shaderMaterial = texturedMaterial;
     this.fallbackMaterial = texturedMaterial ? null : this.createFallbackMaterial(scene);
     this.mesh.material = this.shaderMaterial ?? this.fallbackMaterial;
-
-    for (let i = 0; i < 26; i += 1) {
-      const line = MeshBuilder.CreateTorus(`wave-line-${i}`, { diameter: 9 + i * 8.5, thickness: 0.035, tessellation: 96 }, scene);
-      line.position = new Vector3(0, -0.035 + i * 0.0008, 0);
-      line.scaling.z = 0.56 + (i % 4) * 0.08;
-      const mat = new StandardMaterial(`wave-line-material-${i}`, scene);
-      mat.diffuseColor = new Color3(0.68, 0.95, 1);
-      mat.emissiveColor = new Color3(0.18, 0.48, 0.58);
-      mat.specularColor = new Color3(0, 0, 0);
-      mat.alpha = i % 3 === 0 ? 0.12 : 0.06;
-      line.material = mat;
-    }
   }
 
   update(deltaSeconds: number): void {
