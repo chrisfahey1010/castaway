@@ -2,6 +2,7 @@ import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import type { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import type { Scene } from "@babylonjs/core/scene";
 import { GAME_CONFIG } from "../constants";
 import type { FishingZone } from "../data/fishingZones";
@@ -75,8 +76,8 @@ export class FishingSystem {
   private catchQueue: CatchEvent[] = [];
   private messageQueue: string[] = [];
 
-  constructor(scene: Scene, private readonly audio: AudioManager) {
-    this.bobber = new Bobber(scene);
+  constructor(scene: Scene, private readonly audio: AudioManager, bobberTexture?: Texture) {
+    this.bobber = new Bobber(scene, bobberTexture);
     this.lineMesh = MeshBuilder.CreateLines("fishing-line", { points: [Vector3.Zero(), Vector3.Zero()], updatable: true }, scene);
     this.lineMesh.color = new Color3(0.94, 0.9, 0.78);
     this.lineMesh.isVisible = false;
@@ -199,7 +200,7 @@ export class FishingSystem {
 
     this.hookWindow = this.biteSystem.hookWindowSeconds(this.activeFish, rod);
     this.hookWindowRemaining -= deltaSeconds;
-    this.bobber.mesh.position.y = 0.06 + Math.sin(performance.now() * 0.04) * 0.16;
+    this.bobber.mesh.position.y = 0.16 + Math.sin(performance.now() * 0.04) * 0.07;
 
     if (input.interactPressed) {
       this.reelStartPosition = this.bobber.mesh.position.clone();
@@ -293,8 +294,7 @@ export class FishingSystem {
     }
 
     const playerAnchor = new Vector3(raftPosition.x, raftPosition.y + 1.15, raftPosition.z);
-    const bobberAnchor = this.bobber.mesh.position.clone();
-    bobberAnchor.y += 0.12;
+    const bobberAnchor = this.bobber.getLineAnchorPosition();
     this.lineMesh.color = Color3.FromHexString(line.colorHex);
     MeshBuilder.CreateLines("fishing-line", { points: [playerAnchor, bobberAnchor], instance: this.lineMesh });
     this.lineMesh.isVisible = true;

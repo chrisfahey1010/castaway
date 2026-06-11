@@ -51,7 +51,7 @@ export class Game {
     this.cameraController = new CameraController(this.sceneBundle.camera, this.canvas);
     const raft = new RaftController(this.sceneBundle.scene, this.state.player.position, assets.getTexture("raft"));
     this.player = new PlayerController(raft);
-    this.fishing = new FishingSystem(this.sceneBundle.scene, this.audio);
+    this.fishing = new FishingSystem(this.sceneBundle.scene, this.audio, assets.getTexture("bobber"));
     const hudRoot = document.querySelector<HTMLElement>("#hud-root");
     if (!hudRoot) {
       throw new Error("Missing #hud-root element");
