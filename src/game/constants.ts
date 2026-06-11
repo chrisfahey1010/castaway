@@ -8,8 +8,8 @@ export const GAME_CONFIG = {
   },
   raft: {
     acceleration: 20,
-    maxSpeed: 10,
-    drag: 0.91,
+    maxSpeed: 18,
+    drag: 0.95,
     turnSpeed: 2.25,
     collisionRadius: 2.2,
     shallowSpeedMultiplier: 0.82,
