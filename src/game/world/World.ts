@@ -1,5 +1,6 @@
 import { Material } from "@babylonjs/core/Materials/material";
 import { Effect } from "@babylonjs/core/Materials/effect";
+import { Constants } from "@babylonjs/core/Engines/constants";
 import { ShaderMaterial } from "@babylonjs/core/Materials/shaderMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector2, Vector3 } from "@babylonjs/core/Maths/math.vector";
@@ -334,7 +335,17 @@ export class World {
     material.emissiveColor = new Color3(0, 0.03, 0.05);
     material.specularColor = new Color3(0, 0, 0);
     material.alpha = texture ? 0.22 : 0.2;
-    material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+    material.transparencyMode = texture ? Material.MATERIAL_ALPHATESTANDBLEND : Material.MATERIAL_ALPHABLEND;
+    material.alphaCutOff = 0.03;
+    // Keep overlapping silhouettes from alpha-blending into darker patches.
+    material.stencil.enabled = true;
+    material.stencil.func = Constants.NOTEQUAL;
+    material.stencil.funcRef = 1;
+    material.stencil.funcMask = 0xff;
+    material.stencil.opStencilFail = Constants.KEEP;
+    material.stencil.opDepthFail = Constants.KEEP;
+    material.stencil.opStencilDepthPass = Constants.REPLACE;
+    material.stencil.mask = 0xff;
 
     if (texture) {
       texture.hasAlpha = true;

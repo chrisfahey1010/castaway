@@ -36,7 +36,7 @@ export class Game {
   private autosaveTimer = 0;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
-    this.engine = new Engine(canvas, true, { adaptToDeviceRatio: true });
+    this.engine = new Engine(canvas, true, { adaptToDeviceRatio: true, stencil: true });
     this.input = new InputManager(canvas);
   }
 
