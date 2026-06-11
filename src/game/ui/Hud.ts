@@ -1,4 +1,4 @@
-import type { Rod } from "../data/equipment";
+import type { FishingLine, Rod } from "../data/equipment";
 import { getFishSpriteUrl } from "../data/fishSpecies";
 import type { FishingZone } from "../data/fishingZones";
 import type { FishingSnapshot } from "../fishing/FishingSystem";
@@ -12,6 +12,8 @@ import { Toasts } from "./Toasts";
 export interface HudState {
   zone: FishingZone | null;
   rod: Rod;
+  line: FishingLine;
+  lines: FishingLine[];
   fishing: FishingSnapshot;
   inventory: CaughtFish[];
   collectionLog: Record<string, FishCollectionEntry>;
@@ -22,6 +24,7 @@ export class Hud {
   private readonly zoneEl: HTMLElement;
   private readonly promptEl: HTMLElement;
   private readonly subtleEl: HTMLElement;
+  private readonly lineOptionsEl: HTMLElement;
   private readonly powerFill: HTMLElement;
   private readonly tensionFill: HTMLElement;
   private readonly progressFill: HTMLElement;
@@ -29,8 +32,9 @@ export class Hud {
   private readonly inventoryDrawer: HTMLElement;
   private readonly logDrawer: HTMLElement;
   private catchHideTimer: number | null = null;
+  private lineOptionsKey = "";
 
-  constructor(root: HTMLElement) {
+  constructor(root: HTMLElement, onLineSelected: (lineId: string) => void) {
     root.innerHTML = `
       <div class="hud">
         <div class="hud-top">
@@ -38,6 +42,7 @@ export class Hud {
             <div class="zone" data-zone>Shallow Lagoon</div>
             <div class="prompt" data-prompt>Loading...</div>
             <div class="subtle" data-subtle></div>
+            <div class="line-selector" data-line-options></div>
           </div>
           <div class="buttons">
             <button type="button" data-inventory>Inventory</button>
@@ -68,6 +73,7 @@ export class Hud {
     this.zoneEl = this.must(root, "[data-zone]");
     this.promptEl = this.must(root, "[data-prompt]");
     this.subtleEl = this.must(root, "[data-subtle]");
+    this.lineOptionsEl = this.must(root, "[data-line-options]");
     this.powerFill = this.must(root, "[data-power]");
     this.tensionFill = this.must(root, "[data-tension]");
     this.progressFill = this.must(root, "[data-progress]");
@@ -78,14 +84,21 @@ export class Hud {
 
     this.must(root, "[data-inventory]").addEventListener("click", () => this.toggleDrawer(this.inventoryDrawer, this.logDrawer));
     this.must(root, "[data-log]").addEventListener("click", () => this.toggleDrawer(this.logDrawer, this.inventoryDrawer));
+    this.lineOptionsEl.addEventListener("click", (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-line-id]");
+      if (button) {
+        onLineSelected(button.dataset.lineId ?? "");
+      }
+    });
   }
 
   update(state: HudState): void {
     this.zoneEl.textContent = state.zone?.name ?? "Island Shore";
     this.promptEl.textContent = promptForFishing(state.fishing);
-    this.subtleEl.textContent = `${state.rod.name}${state.fishing.hookedFishName ? ` · ${state.fishing.hookedFishName}` : ""}`;
+    this.subtleEl.textContent = `${state.rod.name} · ${state.line.name}${state.fishing.hookedFishName ? ` · ${state.fishing.hookedFishName}` : ""}`;
+    this.updateLineOptions(state.lines, state.line);
     this.setMeter(this.powerFill, "[data-power-text]", state.fishing.castPower);
-    this.setMeter(this.tensionFill, "[data-tension-text]", state.fishing.tension);
+    this.setMeter(this.tensionFill, "[data-tension-text]", state.fishing.tension / (state.rod.tensionLimit * state.line.tensionLimitMultiplier));
     this.setMeter(this.progressFill, "[data-progress-text]", state.fishing.reelProgress);
     this.inventoryDrawer.innerHTML = `<h2>Inventory</h2>${renderInventory(state.inventory)}`;
     this.logDrawer.innerHTML = `<h2>Collection Log</h2>${renderCollectionLog(state.collectionLog)}`;
@@ -118,6 +131,18 @@ export class Hud {
     if (label) {
       label.textContent = `${percent}%`;
     }
+  }
+
+  private updateLineOptions(lines: FishingLine[], selectedLine: FishingLine): void {
+    const key = `${selectedLine.id}:${lines.map((line) => line.id).join(",")}`;
+    if (key === this.lineOptionsKey) {
+      return;
+    }
+
+    this.lineOptionsKey = key;
+    this.lineOptionsEl.innerHTML = lines
+      .map((line) => `<button type="button" class="line-option${line.id === selectedLine.id ? " selected" : ""}" data-line-id="${line.id}">${line.name}</button>`)
+      .join("");
   }
 
   private toggleDrawer(active: HTMLElement, other: HTMLElement): void {

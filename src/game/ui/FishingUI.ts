@@ -13,7 +13,7 @@ export function promptForFishing(snapshot: FishingSnapshot): string {
     case "biteWindow":
       return "BITE! Click or press Space now!";
     case "reeling":
-      return "Hold to reel, release to lower tension.";
+      return "Hold to reel. Steer toward the bobber to ease tension.";
     case "caught":
       return "Caught!";
     case "escaped":

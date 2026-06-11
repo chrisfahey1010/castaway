@@ -2,6 +2,7 @@ import "@babylonjs/core/Engines/Extensions/engine.views";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { AssetLoader } from "./assets/AssetLoader";
 import { AudioManager } from "./audio/AudioManager";
+import { fishingLines, getFishingLine, startingFishingLine, type FishingLine } from "./data/equipment";
 import { GameLoop } from "./GameLoop";
 import { createScene } from "./SceneFactory";
 import { FishingSystem } from "./fishing/FishingSystem";
@@ -29,6 +30,7 @@ export class Game {
   private cameraController: CameraController | null = null;
   private player: PlayerController | null = null;
   private rod = new RodController();
+  private equippedLine: FishingLine = startingFishingLine;
   private fishing: FishingSystem | null = null;
   private hud: Hud | null = null;
   private autosaveTimer = 0;
@@ -43,6 +45,7 @@ export class Game {
     this.sceneBundle = createScene(this.engine);
     this.assetLoader = new AssetLoader(this.sceneBundle.scene);
     const assets = await this.assetLoader.load();
+    this.equippedLine = getFishingLine(this.state.player.equippedLineId);
 
     this.world = new World(this.sceneBundle.scene, assets.getTexture("palmTree"));
     this.cameraController = new CameraController(this.sceneBundle.camera, this.canvas);
@@ -53,7 +56,7 @@ export class Game {
     if (!hudRoot) {
       throw new Error("Missing #hud-root element");
     }
-    this.hud = new Hud(hudRoot);
+    this.hud = new Hud(hudRoot, (lineId) => this.selectLine(lineId));
     this.input.attach();
     window.addEventListener("resize", this.resize);
   }
@@ -81,13 +84,15 @@ export class Game {
     this.player.update(this.input, this.world, deltaSeconds);
     this.world.update(deltaSeconds);
     this.cameraController.update(this.player.raft.root.position, deltaSeconds);
-    this.fishing.update(this.input, this.world, this.player.raft.root.position, this.rod.equipped, deltaSeconds);
+    this.fishing.update(this.input, this.world, this.player.raft.root.position, this.rod.equipped, this.equippedLine, deltaSeconds);
     this.handleFishingEvents();
 
     const zone = this.world.getZoneAt(this.player.raft.root.position);
     this.hud.update({
       zone,
       rod: this.rod.equipped,
+      line: this.equippedLine,
+      lines: fishingLines,
       fishing: this.fishing.snapshot,
       inventory: this.state.inventory.caughtFish,
       collectionLog: this.state.collectionLog.entries
@@ -124,6 +129,18 @@ export class Game {
 
   private persistState(): void {
     this.saveManager.save(this.state);
+  }
+
+  private selectLine(lineId: string): void {
+    if (this.fishing && this.fishing.state !== "idle") {
+      this.hud?.toasts.show("Change fishing line before casting.");
+      return;
+    }
+
+    this.equippedLine = getFishingLine(lineId);
+    this.state.player.equippedLineId = this.equippedLine.id;
+    this.persistState();
+    this.hud?.toasts.show(`Equipped ${this.equippedLine.name}`);
   }
 
   private readonly resize = (): void => {

@@ -1,13 +1,16 @@
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import type { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import type { Scene } from "@babylonjs/core/scene";
 import { GAME_CONFIG } from "../constants";
 import type { FishingZone } from "../data/fishingZones";
-import type { Rod } from "../data/equipment";
+import type { FishingLine, Rod } from "../data/equipment";
 import type { InputManager } from "../input/InputManager";
 import type { CaughtFish } from "../inventory/Inventory";
 import type { AudioManager } from "../audio/AudioManager";
 import type { World } from "../world/World";
+import { normalizeXZ } from "../utils/math";
 import type { FishSpecies } from "./FishSpecies";
 import { Bobber } from "./Bobber";
 import { BiteSystem } from "./BiteSystem";
@@ -51,10 +54,12 @@ export class FishingSystem {
   private readonly fightSystem = new FishFightSystem();
   private readonly fishSpawner = new FishSpawner();
   private readonly catchResolver = new CatchResolver();
+  private readonly lineMesh: LinesMesh;
 
   private chargeSeconds = 0;
   private castStart = new Vector3(0, 0, 0);
   private castTarget = new Vector3(0, 0, 0);
+  private activeCastDistance: number = GAME_CONFIG.fishing.minCastDistance;
   private castTravelSeconds = 0;
   private castElapsed = 0;
   private biteTimer = 0;
@@ -65,14 +70,21 @@ export class FishingSystem {
   private fightState: FishFightState | null = null;
   private resetTimer = 0;
   private reelSoundTimer = 0;
+  private reelStartPosition = new Vector3(0, 0, 0);
+  private lastRaftPosition: Vector3 | null = null;
   private catchQueue: CatchEvent[] = [];
   private messageQueue: string[] = [];
 
   constructor(scene: Scene, private readonly audio: AudioManager) {
     this.bobber = new Bobber(scene);
+    this.lineMesh = MeshBuilder.CreateLines("fishing-line", { points: [Vector3.Zero(), Vector3.Zero()], updatable: true }, scene);
+    this.lineMesh.color = new Color3(0.94, 0.9, 0.78);
+    this.lineMesh.isVisible = false;
   }
 
-  update(input: InputManager, world: World, raftPosition: Vector3, rod: Rod, deltaSeconds: number): void {
+  update(input: InputManager, world: World, raftPosition: Vector3, rod: Rod, line: FishingLine, deltaSeconds: number): void {
+    const raftDelta = this.lastRaftPosition ? raftPosition.subtract(this.lastRaftPosition) : Vector3.Zero();
+
     switch (this.state) {
       case "idle":
         this.updateIdle(input);
@@ -87,10 +99,10 @@ export class FishingSystem {
         this.updateWaiting(world, rod, deltaSeconds);
         break;
       case "biteWindow":
-        this.updateBiteWindow(input, rod, deltaSeconds);
+        this.updateBiteWindow(input, rod, raftPosition, deltaSeconds);
         break;
       case "reeling":
-        this.updateReeling(input, rod, deltaSeconds);
+        this.updateReeling(input, rod, line, raftPosition, raftDelta, deltaSeconds);
         break;
       case "caught":
       case "escaped":
@@ -98,6 +110,8 @@ export class FishingSystem {
         break;
     }
 
+    this.updateLine(raftPosition, line);
+    this.lastRaftPosition = raftPosition.clone();
     this.updateSnapshot();
   }
 
@@ -130,6 +144,7 @@ export class FishingSystem {
       }
 
       this.castStart = new Vector3(raftPosition.x, 1.1, raftPosition.z);
+      this.activeCastDistance = Math.max(GAME_CONFIG.fishing.minCastDistance, plan.distance);
       this.castElapsed = 0;
       this.castTravelSeconds = Math.max(0.25, plan.distance / GAME_CONFIG.fishing.castTravelSpeed);
       this.bobber.show(this.castStart);
@@ -176,7 +191,7 @@ export class FishingSystem {
     }
   }
 
-  private updateBiteWindow(input: InputManager, rod: Rod, deltaSeconds: number): void {
+  private updateBiteWindow(input: InputManager, rod: Rod, raftPosition: Vector3, deltaSeconds: number): void {
     if (!this.activeFish) {
       this.escape("The fish slipped away.");
       return;
@@ -187,7 +202,10 @@ export class FishingSystem {
     this.bobber.mesh.position.y = 0.06 + Math.sin(performance.now() * 0.04) * 0.16;
 
     if (input.interactPressed) {
-      this.fightState = this.fightSystem.createState();
+      this.reelStartPosition = this.bobber.mesh.position.clone();
+      this.reelStartPosition.y = 0.16;
+      this.fightState = this.fightSystem.createState(this.activeCastDistance);
+      this.updateReelingBobber(raftPosition);
       this.state = "reeling";
       return;
     }
@@ -197,13 +215,23 @@ export class FishingSystem {
     }
   }
 
-  private updateReeling(input: InputManager, rod: Rod, deltaSeconds: number): void {
+  private updateReeling(input: InputManager, rod: Rod, line: FishingLine, raftPosition: Vector3, raftDelta: Vector3, deltaSeconds: number): void {
     if (!this.fightState || !this.activeFish || !this.activeZone) {
       this.escape("The line went slack.");
       return;
     }
 
-    const result = this.fightSystem.update(this.fightState, this.activeFish, rod, input.interactDown, deltaSeconds);
+    const result = this.fightSystem.update(
+      this.fightState,
+      this.activeFish,
+      rod,
+      line,
+      input.interactDown,
+      this.boatTensionAdjustment(raftPosition, raftDelta, line),
+      deltaSeconds
+    );
+    this.updateReelingBobber(raftPosition);
+
     if (input.interactDown) {
       this.reelSoundTimer -= deltaSeconds;
       if (this.reelSoundTimer <= 0) {
@@ -238,6 +266,7 @@ export class FishingSystem {
       this.activeZone = null;
       this.fightState = null;
       this.chargeSeconds = 0;
+      this.activeCastDistance = GAME_CONFIG.fishing.minCastDistance;
       this.bobber.hide();
       this.state = "idle";
     }
@@ -255,6 +284,49 @@ export class FishingSystem {
     this.audio.play("escape");
     this.state = "escaped";
     this.resetTimer = 1.0;
+  }
+
+  private updateLine(raftPosition: Vector3, line: FishingLine): void {
+    if (!this.bobber.mesh.isVisible) {
+      this.lineMesh.isVisible = false;
+      return;
+    }
+
+    const playerAnchor = new Vector3(raftPosition.x, raftPosition.y + 1.15, raftPosition.z);
+    const bobberAnchor = this.bobber.mesh.position.clone();
+    bobberAnchor.y += 0.12;
+    this.lineMesh.color = Color3.FromHexString(line.colorHex);
+    MeshBuilder.CreateLines("fishing-line", { points: [playerAnchor, bobberAnchor], instance: this.lineMesh });
+    this.lineMesh.isVisible = true;
+  }
+
+  private updateReelingBobber(raftPosition: Vector3): void {
+    if (!this.fightState) {
+      return;
+    }
+
+    const direction = normalizeXZ(this.reelStartPosition.subtract(raftPosition));
+    const bobberPosition = new Vector3(
+      raftPosition.x + direction.x * this.fightState.lineRemaining,
+      0.14 + Math.sin(this.fightState.elapsed * 11) * (0.04 + this.fightState.tension * 0.04),
+      raftPosition.z + direction.z * this.fightState.lineRemaining
+    );
+    this.bobber.setPosition(bobberPosition);
+  }
+
+  private boatTensionAdjustment(raftPosition: Vector3, raftDelta: Vector3, line: FishingLine): number {
+    const toBobber = this.bobber.mesh.position.subtract(raftPosition);
+    const distance = Math.hypot(toBobber.x, toBobber.z);
+    if (distance < 0.0001) {
+      return 0;
+    }
+
+    const movementTowardBobber = (raftDelta.x * toBobber.x + raftDelta.z * toBobber.z) / distance;
+    if (movementTowardBobber >= 0) {
+      return -movementTowardBobber * GAME_CONFIG.fishing.boatTowardTensionRelief * line.tensionLimitMultiplier;
+    }
+
+    return -movementTowardBobber * GAME_CONFIG.fishing.boatAwayTensionGain;
   }
 
   private updateSnapshot(): void {

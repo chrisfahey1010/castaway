@@ -7,6 +7,14 @@ export interface Rod {
   reelSpeed: number;
 }
 
+export interface FishingLine {
+  id: string;
+  name: string;
+  tensionLimitMultiplier: number;
+  reelSpeedMultiplier: number;
+  colorHex: string;
+}
+
 export const rods: Rod[] = [
   {
     id: "driftwood-rod",
@@ -27,3 +35,33 @@ export const rods: Rod[] = [
 ];
 
 export const startingRod = rods[0];
+
+export const fishingLines: FishingLine[] = [
+  {
+    id: "light-line",
+    name: "Light Line",
+    tensionLimitMultiplier: 1,
+    reelSpeedMultiplier: 1,
+    colorHex: "#f0e6c7"
+  },
+  {
+    id: "medium-line",
+    name: "Medium Line",
+    tensionLimitMultiplier: 2,
+    reelSpeedMultiplier: 0.86,
+    colorHex: "#d7eef2"
+  },
+  {
+    id: "heavy-line",
+    name: "Heavy Line",
+    tensionLimitMultiplier: 3,
+    reelSpeedMultiplier: 0.72,
+    colorHex: "#bac7d4"
+  }
+];
+
+export const startingFishingLine = fishingLines[0];
+
+export function getFishingLine(id: string): FishingLine {
+  return fishingLines.find((line) => line.id === id) ?? startingFishingLine;
+}
