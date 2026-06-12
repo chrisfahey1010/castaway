@@ -74,6 +74,7 @@ export class FishingSystem {
   constructor(scene: Scene, private readonly audio: AudioManager, bobberTexture?: Texture) {
     this.bobber = new Bobber(scene, bobberTexture);
     this.lineMesh = MeshBuilder.CreateLines("fishing-line", { points: [Vector3.Zero(), Vector3.Zero()], updatable: true }, scene);
+    this.lineMesh.renderingGroupId = 2;
     this.lineMesh.color = new Color3(0.94, 0.9, 0.78);
     this.lineMesh.isVisible = false;
   }
