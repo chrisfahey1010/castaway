@@ -133,7 +133,9 @@ export class Game {
       baitDepths,
       fishing: this.fishing.snapshot,
       inventory: this.state.inventory.caughtFish,
-      collectionLog: this.state.collectionLog.entries
+      collectionLog: this.state.collectionLog.entries,
+      playerPosition: this.player.raft.root.position,
+      camera: this.sceneBundle.camera
     });
 
     this.state.player.position = this.player.raft.root.position.clone();

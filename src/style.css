@@ -175,7 +175,7 @@ button {
 .mobile-controls {
   position: absolute;
   left: 18px;
-  bottom: 158px;
+  bottom: 18px;
   display: none;
   grid-template-columns: repeat(3, 48px);
   grid-template-rows: repeat(2, 48px);
@@ -224,28 +224,22 @@ button {
   grid-row: 2;
 }
 
-.meters {
-  align-self: end;
-  justify-self: center;
-  width: min(420px, calc(100vw - 36px));
+.player-meter {
+  position: absolute;
+  width: 118px;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 54px));
+  transition: opacity 90ms linear;
+}
+
+.player-meter.visible {
+  opacity: 1;
+}
+
+.player-meter .meter {
+  border: 2px solid rgba(0, 0, 0, 0.78);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.34);
   box-sizing: border-box;
-  padding: 14px;
-}
-
-.meter-row {
-  margin-top: 9px;
-}
-
-.meter-row:first-child {
-  margin-top: 0;
-}
-
-.meter-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: rgba(247, 251, 255, 0.82);
-  margin-bottom: 5px;
 }
 
 .meter {
@@ -271,10 +265,6 @@ button {
   transition:
     width 90ms linear,
     background-size 90ms linear;
-}
-
-.meter-fill.progress {
-  background: #70f1ff;
 }
 
 .catch-card {
@@ -488,21 +478,6 @@ button {
     min-width: 148px;
   }
 
-  .meters {
-    width: min(340px, calc(100vw - 20px));
-    padding: 10px;
-    border-radius: 16px;
-  }
-
-  .meter-row {
-    margin-top: 8px;
-  }
-
-  .meter-label {
-    font-size: 12px;
-    margin-bottom: 4px;
-  }
-
   .meter {
     height: 10px;
   }
@@ -510,7 +485,7 @@ button {
   .mobile-controls {
     display: grid;
     left: 12px;
-    bottom: 140px;
+    bottom: 12px;
     grid-template-columns: repeat(3, 44px);
     grid-template-rows: repeat(2, 44px);
     gap: 5px;
@@ -559,7 +534,7 @@ button {
 
   .toasts {
     right: 10px;
-    bottom: 136px;
+    bottom: 12px;
   }
 
   .catch-card {

@@ -1,3 +1,5 @@
+import type { Camera } from "@babylonjs/core/Cameras/camera";
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { BaitDepth, FishingLine, Rod } from "../data/equipment";
 import { getFishSpriteUrl } from "../data/fishSpecies";
 import type { FishingZone } from "../data/fishingZones";
@@ -20,11 +22,12 @@ export interface HudState {
   fishing: FishingSnapshot;
   inventory: CaughtFish[];
   collectionLog: Record<string, FishCollectionEntry>;
+  playerPosition: Vector3;
+  camera: Camera;
 }
 
 export class Hud {
   readonly toasts: Toasts;
-  private readonly root: HTMLElement;
   private readonly zoneEl: HTMLElement;
   private readonly promptEl: HTMLElement;
   private readonly subtleEl: HTMLElement;
@@ -35,9 +38,8 @@ export class Hud {
   private readonly baitDepthSelectorEl: HTMLElement;
   private readonly baitDepthToggleButton: HTMLButtonElement;
   private readonly helpCard: HTMLElement;
-  private readonly powerFill: HTMLElement;
-  private readonly tensionFill: HTMLElement;
-  private readonly progressFill: HTMLElement;
+  private readonly playerMeterEl: HTMLElement;
+  private readonly playerMeterFill: HTMLElement;
   private readonly catchCard: HTMLElement;
   private readonly inventoryDrawer: HTMLElement;
   private readonly logDrawer: HTMLElement;
@@ -51,7 +53,6 @@ export class Hud {
   private baitDepthOptionsKey = "";
 
   constructor(root: HTMLElement, onLineSelected: (lineId: string) => void, onBaitDepthSelected: (baitDepthId: string) => void, onMoveControlsChanged: (controls: RaftControlInput) => void) {
-    this.root = root;
     root.innerHTML = `
       <div class="hud">
         <div class="hud-top">
@@ -89,19 +90,8 @@ export class Hud {
           <button type="button" class="move-button move-down" data-move="backward" aria-label="Move backward">↓</button>
           <button type="button" class="move-button move-right" data-move="right" aria-label="Turn right">→</button>
         </div>
-        <div class="panel meters">
-          <div class="meter-row">
-            <div class="meter-label"><span>Cast Power</span><span data-power-text>0%</span></div>
-            <div class="meter"><div class="meter-fill" data-power></div></div>
-          </div>
-          <div class="meter-row">
-            <div class="meter-label"><span>Line Tension</span><span data-tension-text>0%</span></div>
-            <div class="meter"><div class="meter-fill tension" data-tension></div></div>
-          </div>
-          <div class="meter-row">
-            <div class="meter-label"><span>Reel Progress</span><span data-progress-text>0%</span></div>
-            <div class="meter"><div class="meter-fill progress" data-progress></div></div>
-          </div>
+        <div class="player-meter" data-player-meter aria-hidden="true">
+          <div class="meter"><div class="meter-fill" data-player-meter-fill></div></div>
         </div>
       </div>
       <div class="catch-card" data-catch-card></div>
@@ -126,9 +116,8 @@ export class Hud {
     this.baitDepthOptionsEl = this.must(root, "[data-bait-depth-options]");
     this.baitDepthSelectorEl = this.must(root, "[data-bait-depth-selector]");
     this.baitDepthToggleButton = this.must(root, "[data-bait-depth-toggle]") as HTMLButtonElement;
-    this.powerFill = this.must(root, "[data-power]");
-    this.tensionFill = this.must(root, "[data-tension]");
-    this.progressFill = this.must(root, "[data-progress]");
+    this.playerMeterEl = this.must(root, "[data-player-meter]");
+    this.playerMeterFill = this.must(root, "[data-player-meter-fill]");
     this.catchCard = this.must(root, "[data-catch-card]");
     this.helpCard = this.must(root, "[data-help-card]");
     this.inventoryDrawer = this.must(root, "[data-inventory-drawer]");
@@ -180,9 +169,7 @@ export class Hud {
     this.subtleEl.textContent = `${state.rod.name} · ${state.line.name} · ${state.baitDepth.name} Depth`;
     this.updateLineOptions(state.lines, state.line);
     this.updateBaitDepthOptions(state.baitDepths, state.baitDepth);
-    this.setMeter(this.powerFill, "[data-power-text]", state.fishing.castPower, true);
-    this.setMeter(this.tensionFill, "[data-tension-text]", state.fishing.tension / (state.rod.tensionLimit * state.line.tensionLimitMultiplier), true);
-    this.setMeter(this.progressFill, "[data-progress-text]", state.fishing.reelProgress);
+    this.updatePlayerMeter(state);
     const inventoryHtml = `<button type="button" class="drawer-close" data-drawer-close aria-label="Close inventory">x</button><h2>Inventory</h2>${renderInventory(state.inventory)}`;
     if (inventoryHtml !== this.inventoryHtml) {
       this.inventoryHtml = inventoryHtml;
@@ -216,17 +203,43 @@ export class Hud {
     this.catchHideTimer = window.setTimeout(() => this.catchCard.classList.remove("visible"), 3200);
   }
 
-  private setMeter(fill: HTMLElement, labelSelector: string, value: number, preserveGradientRange = false): void {
+  private updatePlayerMeter(state: HudState): void {
+    const isCasting = state.fishing.state === "chargingCast";
+    const isReeling = state.fishing.state === "reeling";
+
+    if (!isCasting && !isReeling) {
+      this.playerMeterEl.classList.remove("visible");
+      this.playerMeterEl.setAttribute("aria-hidden", "true");
+      return;
+    }
+
+    const value = isCasting
+      ? state.fishing.castPower
+      : state.fishing.tension / (state.rod.tensionLimit * state.line.tensionLimitMultiplier);
+    this.playerMeterFill.classList.toggle("tension", isReeling);
+    this.setMeter(this.playerMeterFill, value, true);
+    this.positionPlayerMeter(state.playerPosition, state.camera);
+    this.playerMeterEl.classList.add("visible");
+    this.playerMeterEl.setAttribute("aria-hidden", "false");
+  }
+
+  private positionPlayerMeter(position: Vector3, camera: Camera): void {
+    const scene = camera.getScene();
+    const engine = scene.getEngine();
+    const canvas = engine.getRenderingCanvas();
+    const viewport = camera.viewport.toGlobal(canvas?.clientWidth ?? engine.getRenderWidth(), canvas?.clientHeight ?? engine.getRenderHeight());
+    const screenPosition = Vector3.Project(position, Matrix.Identity(), scene.getTransformMatrix(), viewport);
+    this.playerMeterEl.style.left = `${screenPosition.x}px`;
+    this.playerMeterEl.style.top = `${screenPosition.y}px`;
+  }
+
+  private setMeter(fill: HTMLElement, value: number, preserveGradientRange = false): void {
     const percent = Math.round(Math.max(0, Math.min(1, value)) * 100);
     if (preserveGradientRange) {
       fill.style.width = `${percent}%`;
       fill.style.backgroundSize = percent > 0 ? `${10000 / percent}% 100%` : "100% 100%";
     } else {
       fill.style.width = `${percent}%`;
-    }
-    const label = this.root.querySelector<HTMLElement>(labelSelector);
-    if (label) {
-      label.textContent = `${percent}%`;
     }
   }
 
