@@ -12,7 +12,7 @@ import type { CaughtFish } from "../inventory/Inventory";
 import type { AudioManager } from "../audio/AudioManager";
 import type { World } from "../world/World";
 import { normalizeXZ, xzDistance } from "../utils/math";
-import type { FishSpecies } from "./FishSpecies";
+import type { FishFightStats, FishSpecies } from "./FishSpecies";
 import { Bobber } from "./Bobber";
 import { BiteSystem } from "./BiteSystem";
 import { CastSystem } from "./CastSystem";
@@ -65,6 +65,8 @@ export class FishingSystem {
   private hookWindowRemaining = 0;
   private activeZone: FishingZone | null = null;
   private activeFish: FishSpecies | null = null;
+  private activeCatch: CaughtFish | null = null;
+  private activeFight: FishFightStats | null = null;
   private fightState: FishFightState | null = null;
   private fishSwimDirection = new Vector3(0, 0, 1);
   private resetTimer = 0;
@@ -170,13 +172,16 @@ export class FishingSystem {
         return;
       }
 
-      this.activeFish = this.fishSpawner.pickFish(this.activeZone, baitDepth, baitType);
-      if (!this.activeFish) {
+      const activeFish = this.fishSpawner.pickFish(this.activeZone, baitDepth, baitType);
+      if (!activeFish) {
         this.failCast("No fish are biting with that bait and depth combo.");
         return;
       }
 
-      this.biteTimer = this.biteSystem.nextBiteSeconds(this.activeFish);
+      this.activeFish = activeFish;
+      this.activeCatch = this.catchResolver.resolve(activeFish, this.activeZone);
+      this.activeFight = this.fightSystem.createFightStats(activeFish, this.activeCatch.weightG);
+      this.biteTimer = this.biteSystem.nextBiteSeconds(activeFish);
       this.state = "waitingForBite";
     }
   }
@@ -229,7 +234,7 @@ export class FishingSystem {
   }
 
   private updateReeling(input: InputManager, world: World, rod: Rod, line: FishingLine, lineAnchorPosition: Vector3, deltaSeconds: number): void {
-    if (!this.fightState || !this.activeFish || !this.activeZone) {
+    if (!this.fightState || !this.activeFish || !this.activeCatch || !this.activeFight || !this.activeZone) {
       this.escape("The line went slack.");
       return;
     }
@@ -238,7 +243,7 @@ export class FishingSystem {
 
     const result = this.fightSystem.update(
       this.fightState,
-      this.activeFish,
+      this.activeFight,
       rod,
       line,
       input.interactDown,
@@ -254,7 +259,7 @@ export class FishingSystem {
     }
 
     if (result === "caught") {
-      const caught = this.catchResolver.resolve(this.activeFish, this.activeZone);
+      const caught = { ...this.activeCatch, caughtAt: Date.now() };
       this.catchQueue.push({ caught, species: this.activeFish });
       this.audio.stop("reel");
       this.audio.play("catchSuccess");
@@ -277,6 +282,8 @@ export class FishingSystem {
     this.resetTimer -= deltaSeconds;
     if (this.resetTimer <= 0) {
       this.activeFish = null;
+      this.activeCatch = null;
+      this.activeFight = null;
       this.activeZone = null;
       this.fightState = null;
       this.chargeSeconds = 0;
@@ -292,6 +299,8 @@ export class FishingSystem {
 
     if (distance <= 1.8 || retrieveDistance >= distance) {
       this.activeFish = null;
+      this.activeCatch = null;
+      this.activeFight = null;
       this.activeZone = null;
       this.fightState = null;
       this.audio.stop("reel");
@@ -345,27 +354,27 @@ export class FishingSystem {
   }
 
   private updateFightingBobber(world: World, lineAnchorPosition: Vector3, deltaSeconds: number): void {
-    if (!this.fightState || !this.activeFish) {
+    if (!this.fightState || !this.activeFight) {
       return;
     }
 
     const bobberPosition = this.bobber.mesh.position;
     const awayFromRod = normalizeXZ(bobberPosition.subtract(lineAnchorPosition));
     const lateral = new Vector3(-this.fishSwimDirection.z, 0, this.fishSwimDirection.x).scale(
-      Math.sin(this.fightState.elapsed * (1.6 + this.activeFish.fight.erraticness * 2.5)) * this.activeFish.fight.erraticness * 0.85
+      Math.sin(this.fightState.elapsed * (1.6 + this.activeFight.erraticness * 2.5)) * this.activeFight.erraticness * 0.85
     );
     const tautness = this.lineDistance(lineAnchorPosition, bobberPosition) / Math.max(0.001, this.fightState.lineLength);
     const desiredSwimDirection = normalizeXZ(
       this.fishSwimDirection
         .scale(1.35)
-        .add(awayFromRod.scale(Math.max(0, tautness - 0.45) * (0.85 + this.activeFish.fight.strength * 0.35)))
+        .add(awayFromRod.scale(Math.max(0, tautness - 0.45) * (0.85 + this.activeFight.strength * 0.35)))
         .add(lateral)
     );
-    const turnFactor = 1 - Math.exp(-(1.2 + this.activeFish.fight.erraticness * 2.4) * deltaSeconds);
+    const turnFactor = 1 - Math.exp(-(1.2 + this.activeFight.erraticness * 2.4) * deltaSeconds);
     this.fishSwimDirection = normalizeXZ(
       this.fishSwimDirection.scale(1 - turnFactor).add(desiredSwimDirection.scale(turnFactor))
     );
-    const swimSpeed = GAME_CONFIG.fishing.fishRunLineSpeed * this.activeFish.fight.stamina * (0.5 + this.fightState.runIntensity * this.activeFish.fight.strength);
+    const swimSpeed = GAME_CONFIG.fishing.fishRunLineSpeed * this.activeFight.stamina * (0.5 + this.fightState.runIntensity * this.activeFight.strength);
     const unconstrained = bobberPosition.add(this.fishSwimDirection.scale(swimSpeed * deltaSeconds));
     const constrained = this.constrainToLineLength(unconstrained, lineAnchorPosition, this.fightState.lineLength);
     constrained.y = 0.14 + Math.sin(this.fightState.elapsed * 11) * (0.035 + this.fightState.tension * 0.045);
