@@ -16,9 +16,15 @@ export interface FishingLine {
 }
 
 export type BaitDepthId = "shallow" | "medium" | "deep";
+export type BaitTypeId = "pork" | "coconut-grub" | "hermit-crab-bits" | "questionable-seaweed";
 
 export interface BaitDepth {
   id: BaitDepthId;
+  name: string;
+}
+
+export interface BaitType {
+  id: BaitTypeId;
   name: string;
 }
 
@@ -69,6 +75,27 @@ export const fishingLines: FishingLine[] = [
 
 export const startingFishingLine = fishingLines[0];
 
+export const baitTypes: BaitType[] = [
+  {
+    id: "pork",
+    name: "Salted Pork"
+  },
+  {
+    id: "coconut-grub",
+    name: "Coconut Grub"
+  },
+  {
+    id: "hermit-crab-bits",
+    name: "Crab Meat"
+  },
+  {
+    id: "questionable-seaweed",
+    name: "Tasty Kelp"
+  }
+];
+
+export const startingBaitType = baitTypes[3];
+
 export const baitDepths: BaitDepth[] = [
   {
     id: "shallow",
@@ -88,6 +115,10 @@ export const startingBaitDepth = baitDepths[0];
 
 export function getFishingLine(id: string): FishingLine {
   return fishingLines.find((line) => line.id === id) ?? startingFishingLine;
+}
+
+export function getBaitType(id: string): BaitType {
+  return baitTypes.find((bait) => bait.id === id) ?? startingBaitType;
 }
 
 export function getBaitDepth(id: string): BaitDepth {

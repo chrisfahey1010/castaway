@@ -1,4 +1,4 @@
-import type { BaitDepthId } from "../data/equipment";
+import type { BaitDepthId, BaitTypeId } from "../data/equipment";
 
 export type FishingZoneType = "lagoon" | "reef" | "deep";
 export type FishRarity = "common" | "uncommon" | "rare" | "legendary";
@@ -20,6 +20,8 @@ export interface FishSpecies {
   secondaryBiomes: FishingZoneType[];
   preferredDepth: BaitDepthId;
   secondaryDepths: BaitDepthId[];
+  primaryBait: BaitTypeId;
+  secondaryBaits: BaitTypeId[];
   minDepth: number;
   maxDepth: number;
   minLengthCm: number;

@@ -1,13 +1,13 @@
 import type { FishingZone } from "../data/fishingZones";
 import { getFishSpecies } from "../data/fishSpecies";
-import type { BaitDepth } from "../data/equipment";
+import type { BaitDepth, BaitType } from "../data/equipment";
 import { pickWeighted } from "../utils/random";
-import type { FishingZoneType, FishSpecies } from "./FishSpecies";
+import type { FishSpecies } from "./FishSpecies";
 
 const SECONDARY_PREFERENCE_MULTIPLIER = 0.25;
 
 export class FishSpawner {
-  pickFish(zone: FishingZone, baitDepth: BaitDepth): FishSpecies | null {
+  pickFish(zone: FishingZone, baitDepth: BaitDepth, baitType: BaitType): FishSpecies | null {
     const eligible = zone.fishTable
       .map((entry) => {
         const species = getFishSpecies(entry.fishId);
@@ -17,13 +17,14 @@ export class FishSpawner {
 
         const biomeMultiplier = this.preferenceMultiplier(zone.type, species.preferredBiome, species.secondaryBiomes);
         const depthMultiplier = this.preferenceMultiplier(baitDepth.id, species.preferredDepth, species.secondaryDepths);
-        if (biomeMultiplier <= 0 || depthMultiplier <= 0) {
+        const baitMultiplier = this.preferenceMultiplier(baitType.id, species.primaryBait, species.secondaryBaits);
+        if (biomeMultiplier <= 0 || depthMultiplier <= 0 || baitMultiplier <= 0) {
           return null;
         }
 
         return {
           item: species,
-          weight: entry.weight * species.biteChanceModifier * biomeMultiplier * depthMultiplier
+          weight: entry.weight * species.biteChanceModifier * biomeMultiplier * depthMultiplier * baitMultiplier
         };
       })
       .filter((entry): entry is { item: FishSpecies; weight: number } => entry !== null);
@@ -35,7 +36,7 @@ export class FishSpawner {
     return pickWeighted(eligible);
   }
 
-  private preferenceMultiplier<TPreference extends FishingZoneType | BaitDepth["id"]>(value: TPreference, preferred: TPreference, secondary: TPreference[]): number {
+  private preferenceMultiplier<TPreference extends string>(value: TPreference, preferred: TPreference, secondary: TPreference[]): number {
     if (value === preferred) {
       return 1;
     }

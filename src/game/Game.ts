@@ -4,12 +4,16 @@ import { AssetLoader } from "./assets/AssetLoader";
 import { AudioManager } from "./audio/AudioManager";
 import {
   baitDepths,
+  baitTypes,
   fishingLines,
   getBaitDepth,
+  getBaitType,
   getFishingLine,
   startingBaitDepth,
+  startingBaitType,
   startingFishingLine,
   type BaitDepth,
+  type BaitType,
   type FishingLine
 } from "./data/equipment";
 import { GameLoop } from "./GameLoop";
@@ -40,6 +44,7 @@ export class Game {
   private player: PlayerController | null = null;
   private rod = new RodController();
   private equippedLine: FishingLine = startingFishingLine;
+  private equippedBaitType: BaitType = startingBaitType;
   private equippedBaitDepth: BaitDepth = startingBaitDepth;
   private fishing: FishingSystem | null = null;
   private hud: Hud | null = null;
@@ -56,6 +61,7 @@ export class Game {
     this.assetLoader = new AssetLoader(this.sceneBundle.scene);
     const assets = await this.assetLoader.load();
     this.equippedLine = getFishingLine(this.state.player.equippedLineId);
+    this.equippedBaitType = getBaitType(this.state.player.equippedBaitTypeId);
     this.equippedBaitDepth = getBaitDepth(this.state.player.equippedBaitDepthId);
 
     this.world = new World(this.sceneBundle.scene, {
@@ -81,6 +87,7 @@ export class Game {
     this.hud = new Hud(
       hudRoot,
       (lineId) => this.selectLine(lineId),
+      (baitTypeId) => this.selectBaitType(baitTypeId),
       (baitDepthId) => this.selectBaitDepth(baitDepthId),
       (controls) => this.input.setTouchControls(controls)
     );
@@ -119,6 +126,7 @@ export class Game {
       this.rod.equipped,
       this.equippedLine,
       this.equippedBaitDepth,
+      this.equippedBaitType,
       deltaSeconds
     );
     this.handleFishingEvents();
@@ -129,6 +137,8 @@ export class Game {
       rod: this.rod.equipped,
       line: this.equippedLine,
       lines: fishingLines,
+      baitType: this.equippedBaitType,
+      baitTypes,
       baitDepth: this.equippedBaitDepth,
       baitDepths,
       fishing: this.fishing.snapshot,
@@ -180,6 +190,18 @@ export class Game {
     this.state.player.equippedLineId = this.equippedLine.id;
     this.persistState();
     this.hud?.toasts.show(`Equipped ${this.equippedLine.name}`);
+  }
+
+  private selectBaitType(baitTypeId: string): void {
+    if (this.fishing && this.fishing.state !== "idle") {
+      this.hud?.toasts.show("Select bait before casting.");
+      return;
+    }
+
+    this.equippedBaitType = getBaitType(baitTypeId);
+    this.state.player.equippedBaitTypeId = this.equippedBaitType.id;
+    this.persistState();
+    this.hud?.toasts.show(`Selected ${this.equippedBaitType.name} bait`);
   }
 
   private selectBaitDepth(baitDepthId: string): void {

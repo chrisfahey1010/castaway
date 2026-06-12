@@ -6,7 +6,7 @@ import type { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import type { Scene } from "@babylonjs/core/scene";
 import { GAME_CONFIG } from "../constants";
 import type { FishingZone } from "../data/fishingZones";
-import type { BaitDepth, FishingLine, Rod } from "../data/equipment";
+import type { BaitDepth, BaitType, FishingLine, Rod } from "../data/equipment";
 import type { InputManager } from "../input/InputManager";
 import type { CaughtFish } from "../inventory/Inventory";
 import type { AudioManager } from "../audio/AudioManager";
@@ -80,7 +80,7 @@ export class FishingSystem {
     this.lineMesh.isVisible = false;
   }
 
-  update(input: InputManager, world: World, raftPosition: Vector3, lineAnchorPosition: Vector3, rod: Rod, line: FishingLine, baitDepth: BaitDepth, deltaSeconds: number): void {
+  update(input: InputManager, world: World, raftPosition: Vector3, lineAnchorPosition: Vector3, rod: Rod, line: FishingLine, baitDepth: BaitDepth, baitType: BaitType, deltaSeconds: number): void {
     const raftDelta = this.lastRaftPosition ? raftPosition.subtract(this.lastRaftPosition) : Vector3.Zero();
 
     switch (this.state) {
@@ -91,7 +91,7 @@ export class FishingSystem {
         this.updateCharging(input, raftPosition, lineAnchorPosition, rod, world, baitDepth, deltaSeconds);
         break;
       case "casting":
-        this.updateCasting(world, baitDepth, deltaSeconds);
+        this.updateCasting(world, baitDepth, baitType, deltaSeconds);
         break;
       case "waitingForBite":
         this.updateWaiting(world, rod, deltaSeconds);
@@ -156,7 +156,7 @@ export class FishingSystem {
     }
   }
 
-  private updateCasting(world: World, baitDepth: BaitDepth, deltaSeconds: number): void {
+  private updateCasting(world: World, baitDepth: BaitDepth, baitType: BaitType, deltaSeconds: number): void {
     this.castElapsed += deltaSeconds;
     const progress = Math.min(1, this.castElapsed / this.castTravelSeconds);
     const arcHeight = Math.sin(progress * Math.PI) * 3.6;
@@ -175,9 +175,9 @@ export class FishingSystem {
         return;
       }
 
-      this.activeFish = this.fishSpawner.pickFish(this.activeZone, baitDepth);
+      this.activeFish = this.fishSpawner.pickFish(this.activeZone, baitDepth, baitType);
       if (!this.activeFish) {
-        this.failCast("No fish are biting at that bait depth.");
+        this.failCast("No fish are biting with that bait and depth combo.");
         return;
       }
 
