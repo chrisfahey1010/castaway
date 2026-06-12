@@ -9,7 +9,7 @@ export function promptForFishing(snapshot: FishingSnapshot, isMobile = false): s
     case "casting":
       return "Casting...";
     case "waitingForBite":
-      return "Waiting for a bite...";
+      return "Waiting for a bite. Hold to reel the bobber in.";
     case "biteWindow":
       return isMobile ? "BITE! Tap now!" : "BITE! Click or press Space now!";
     case "reeling":
