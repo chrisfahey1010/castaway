@@ -405,6 +405,51 @@ button {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.collection-item {
+  align-items: flex-start;
+}
+
+.collection-sprite {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 48px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgba(0, 12, 22, 0.26));
+  user-select: none;
+}
+
+.collection-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.collection-row-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.collection-row-top > strong {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.collection-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.collection-facts span {
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgba(184, 239, 255, 0.1);
+  color: rgba(247, 251, 255, 0.78);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
 @media (max-width: 680px) {
   .hud {
     padding: 10px;
@@ -530,6 +575,20 @@ button {
     padding: 8px;
     gap: 8px;
     font-size: 13px;
+  }
+
+  .collection-sprite {
+    flex-basis: 48px;
+    width: 48px;
+    height: 40px;
+  }
+
+  .collection-row-top {
+    gap: 8px;
+  }
+
+  .collection-facts span {
+    font-size: 10px;
   }
 
   .toasts {

@@ -8,6 +8,7 @@ export interface FishCollectionEntry {
   description: string;
   totalCaught: number;
   bestLengthCm: number;
+  bestWeightKg: number;
   firstCaughtAt: number;
 }
 
@@ -17,7 +18,7 @@ export class CollectionLog {
   recordCatch(caught: CaughtFish, species: FishSpecies): { isFirstCatch: boolean; isNewRecord: boolean } {
     const existing = this.entries[caught.speciesId];
     const isFirstCatch = !existing;
-    const isNewRecord = !existing || caught.lengthCm > existing.bestLengthCm;
+    const isNewRecord = !existing || caught.weightKg > (existing.bestWeightKg ?? 0);
 
     this.entries[caught.speciesId] = {
       speciesId: caught.speciesId,
@@ -26,13 +27,28 @@ export class CollectionLog {
       description: species.description,
       totalCaught: (existing?.totalCaught ?? 0) + 1,
       bestLengthCm: Math.max(existing?.bestLengthCm ?? 0, caught.lengthCm),
+      bestWeightKg: Math.max(existing?.bestWeightKg ?? 0, caught.weightKg),
       firstCaughtAt: existing?.firstCaughtAt ?? caught.caughtAt
     };
 
     return { isFirstCatch, isNewRecord };
   }
 
-  load(entries: Record<string, FishCollectionEntry>): void {
-    this.entries = entries;
+  load(entries: Record<string, FishCollectionEntry>, caughtFish: CaughtFish[] = []): void {
+    this.entries = Object.fromEntries(
+      Object.entries(entries).map(([speciesId, entry]) => {
+        const inventoryBestWeight = caughtFish
+          .filter((fish) => fish.speciesId === speciesId)
+          .reduce((best, fish) => Math.max(best, fish.weightKg), 0);
+
+        return [
+          speciesId,
+          {
+            ...entry,
+            bestWeightKg: entry.bestWeightKg ?? inventoryBestWeight
+          }
+        ];
+      })
+    );
   }
 }

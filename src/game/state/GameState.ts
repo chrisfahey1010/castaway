@@ -39,7 +39,7 @@ export class GameState {
 
     this.player.applySnapshot(save.player);
     this.inventory.load(save.inventory ?? []);
-    this.collectionLog.load(save.collectionLog ?? {});
+    this.collectionLog.load(save.collectionLog ?? {}, save.inventory ?? []);
     this.records = save.records ?? {};
     this.settings = save.settings ?? this.settings;
   }

@@ -1,7 +1,7 @@
 import type { Camera } from "@babylonjs/core/Cameras/camera";
 import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { BaitDepth, BaitType, FishingLine, Rod } from "../data/equipment";
-import { getFishSpriteUrl } from "../data/fishSpecies";
+import { fishSpecies, getFishSpriteUrl } from "../data/fishSpecies";
 import type { FishingZone } from "../data/fishingZones";
 import type { FishingSnapshot } from "../fishing/FishingSystem";
 import type { RaftControlInput } from "../input/InputManager";
@@ -204,7 +204,8 @@ export class Hud {
       this.inventoryDrawer.innerHTML = inventoryHtml;
     }
 
-    const logHtml = `<button type="button" class="drawer-close" data-drawer-close aria-label="Close collection log">x</button><h2>Collection Log</h2>${renderCollectionLog(state.collectionLog)}`;
+    const discoveredSpecies = Object.keys(state.collectionLog).length;
+    const logHtml = `<button type="button" class="drawer-close" data-drawer-close aria-label="Close collection log">x</button><h2>Species (${discoveredSpecies}/${fishSpecies.length})</h2>${renderCollectionLog(state.collectionLog)}`;
     if (logHtml !== this.logHtml) {
       this.logHtml = logHtml;
       this.logDrawer.innerHTML = logHtml;
