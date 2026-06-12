@@ -49,6 +49,7 @@ export class Game {
   private fishing: FishingSystem | null = null;
   private hud: Hud | null = null;
   private autosaveTimer = 0;
+  private isResetting = false;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     this.engine = new Engine(canvas, true, { adaptToDeviceRatio: true, stencil: true });
@@ -89,7 +90,8 @@ export class Game {
       (lineId) => this.selectLine(lineId),
       (baitTypeId) => this.selectBaitType(baitTypeId),
       (baitDepthId) => this.selectBaitDepth(baitDepthId),
-      (controls) => this.input.setTouchControls(controls)
+      (controls) => this.input.setTouchControls(controls),
+      () => this.resetGame()
     );
     this.input.attach();
     window.addEventListener("resize", this.resize);
@@ -103,7 +105,9 @@ export class Game {
   }
 
   dispose(): void {
-    this.persistState();
+    if (!this.isResetting) {
+      this.persistState();
+    }
     window.removeEventListener("resize", this.resize);
     this.input.detach();
     this.engine.dispose();
@@ -178,6 +182,12 @@ export class Game {
 
   private persistState(): void {
     this.saveManager.save(this.state);
+  }
+
+  private resetGame(): void {
+    this.isResetting = true;
+    this.saveManager.clear();
+    window.location.reload();
   }
 
   private selectLine(lineId: string): void {

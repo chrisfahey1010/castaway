@@ -307,6 +307,18 @@ button {
   line-height: 1.35;
 }
 
+.help-actions {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(184, 239, 255, 0.18);
+}
+
+.reset-game-button {
+  width: 100%;
+  background: rgba(255, 116, 104, 0.92);
+  color: #fff7f4;
+}
+
 .catch-card.visible {
   opacity: 1;
 }

@@ -63,7 +63,8 @@ export class Hud {
     onLineSelected: (lineId: string) => void,
     onBaitTypeSelected: (baitTypeId: string) => void,
     onBaitDepthSelected: (baitDepthId: string) => void,
-    onMoveControlsChanged: (controls: RaftControlInput) => void
+    onMoveControlsChanged: (controls: RaftControlInput) => void,
+    onResetGame: () => void
   ) {
     root.innerHTML = `
       <div class="hud">
@@ -118,6 +119,9 @@ export class Hud {
         <p>Select line and bait depth before casting. Aim at the water, then hold and release to cast.</p>
         <p>Tap during a bite, then hold to reel.</p>
         <p>Steer toward the bobber while reeling to reduce line tension.</p>
+        <div class="help-actions">
+          <button type="button" class="reset-game-button" data-reset-game>Reset Game</button>
+        </div>
       </div>
       <div class="drawer" data-inventory-drawer></div>
       <div class="drawer" data-log-drawer></div>
@@ -150,6 +154,11 @@ export class Hud {
     root.querySelectorAll("[data-log]").forEach((button) => button.addEventListener("click", () => this.toggleDrawer(this.logDrawer, this.inventoryDrawer)));
     this.must(root, "[data-help-toggle]").addEventListener("click", () => this.toggleHelp());
     this.must(root, "[data-help-close]").addEventListener("click", () => this.setHelpVisible(false));
+    this.must(root, "[data-reset-game]").addEventListener("click", () => {
+      if (window.confirm("Reset all progress and restart the game?")) {
+        onResetGame();
+      }
+    });
     this.lineToggleButton.addEventListener("click", () => this.toggleLineMenu());
     this.baitTypeToggleButton.addEventListener("click", () => this.toggleBaitTypeMenu());
     this.baitDepthToggleButton.addEventListener("click", () => this.toggleBaitDepthMenu());

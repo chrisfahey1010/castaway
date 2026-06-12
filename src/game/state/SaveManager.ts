@@ -19,4 +19,8 @@ export class SaveManager {
   save(state: GameState): void {
     window.localStorage.setItem(SAVE_KEY, JSON.stringify(state.toSaveGame()));
   }
+
+  clear(): void {
+    window.localStorage.removeItem(SAVE_KEY);
+  }
 }
