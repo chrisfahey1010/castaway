@@ -23,10 +23,10 @@ export class RaftController {
   private bobTime = 0;
   private readonly fishingLineAnchor: TransformNode;
 
-  constructor(scene: Scene, startPosition = new Vector3(0, 0, 34), raftTexture?: Texture, fishermanTexture?: Texture) {
+  constructor(scene: Scene, startPosition = new Vector3(0, 0, GAME_CONFIG.world.islandRadius * 1.1), raftTexture?: Texture, fishermanTexture?: Texture) {
     this.root = new TransformNode("raft-root", scene);
     this.root.position = startPosition.clone();
-    this.root.rotation.y = Math.PI;
+    this.root.rotation.y = -Math.PI / 4;
     this.fishingLineAnchor = new TransformNode("fishing-line-anchor", scene);
     this.fishingLineAnchor.parent = this.root;
 

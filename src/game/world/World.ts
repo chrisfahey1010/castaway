@@ -141,6 +141,7 @@ function registerObstacleBlendShaders(): void {
 
 export interface WorldTextures {
   palm?: Texture;
+  planeCrash?: Texture;
   sand?: Texture;
   grass?: Texture;
   coral?: Texture;
@@ -168,6 +169,7 @@ export class World {
     });
     this.island = new Island(scene, {
       palm: textures.palm,
+      planeCrash: textures.planeCrash,
       sand: textures.sand,
       grass: textures.grass
     });
@@ -214,11 +216,14 @@ export class World {
     const coralMaterial = this.createObstacleMaterial(scene, "coral-material", textures.coral, new Color3(0.95, 0.38, 0.35), new Color3(0.18, 0.04, 0.04), 0.36);
 
     const obstacleData: ObstacleVisual[] = [
-      { x: -35, z: 18, radius: 3.3, coral: true },
-      { x: 36, z: -28, radius: 3.8, coral: true },
-      { x: 18, z: 48, radius: 4.5, coral: true },
-      { x: -58, z: -12, radius: 4.2, coral: false },
-      { x: 72, z: 22, radius: 5, coral: false }
+      { x: -72, z: 34, radius: 6.6, coral: true },
+      { x: 70, z: -54, radius: 7.6, coral: true },
+      { x: 38, z: 96, radius: 9, coral: true },
+      { x: -116, z: -24, radius: 8.4, coral: false },
+      { x: 144, z: 44, radius: 10, coral: false },
+      { x: -22, z: -96, radius: 5.8, coral: true },
+      { x: 102, z: 118, radius: 7.2, coral: true },
+      { x: -154, z: 76, radius: 7.8, coral: false }
     ];
 
     return obstacleData.map((obstacle, index) => {
@@ -362,7 +367,7 @@ export class World {
     const shadowTypes = [
       {
         name: "shark",
-        count: 12,
+        count: 24,
         texture: textures.fishShadow,
         minRadius: SHARK_MIN_RADIUS,
         maxRadius: SHARK_MAX_RADIUS,
@@ -374,7 +379,7 @@ export class World {
       },
       {
         name: "stingray",
-        count: 6,
+        count: 12,
         texture: textures.stingrayShadow,
         minRadius: STINGRAY_MIN_RADIUS,
         maxRadius: STINGRAY_MAX_RADIUS,

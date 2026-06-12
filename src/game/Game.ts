@@ -68,6 +68,7 @@ export class Game {
 
     this.world = new World(this.sceneBundle.scene, {
       palm: assets.getTexture("palmTree"),
+      planeCrash: assets.getTexture("planeCrash"),
       sand: assets.getTexture("sand"),
       grass: assets.getTexture("grass"),
       coral: assets.getTexture("coral"),

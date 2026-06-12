@@ -1,4 +1,5 @@
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { GAME_CONFIG } from "../constants";
 import { getBaitDepth, getBaitType, startingBaitDepth, startingBaitType, startingFishingLine, startingRod } from "../data/equipment";
 
 export interface PlayerStateSnapshot {
@@ -10,7 +11,7 @@ export interface PlayerStateSnapshot {
 }
 
 export class PlayerState {
-  position = new Vector3(0, 0, 34);
+  position = new Vector3(0, 0, GAME_CONFIG.world.islandRadius * 1.1);
   equippedRodId = startingRod.id;
   equippedLineId = startingFishingLine.id;
   equippedBaitTypeId = startingBaitType.id;

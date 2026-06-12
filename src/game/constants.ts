@@ -1,10 +1,10 @@
 export const GAME_CONFIG = {
   world: {
-    radius: 120,
-    islandRadius: 22,
-    shallowRadius: 48,
-    reefRadius: 78,
-    deepRadius: 120
+    radius: 240,
+    islandRadius: 44,
+    shallowRadius: 96,
+    reefRadius: 156,
+    deepRadius: 240
   },
   raft: {
     acceleration: 20,
