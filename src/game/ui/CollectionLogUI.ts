@@ -21,7 +21,7 @@ export function renderCollectionLog(entries: Record<string, FishCollectionEntry>
         ? formatPreferences(species.preferredDepth, species.secondaryDepths, (depthId) => getBaitDepth(depthId).name)
         : "Unknown";
       const baits = species
-        ? formatPreferences(species.primaryBait, species.secondaryBaits, (baitId) => getBaitType(baitId).name)
+        ? formatPreferences(species.primaryBait, [species.secondaryBait], (baitId) => getBaitType(baitId).name)
         : "Unknown";
 
       return `<div class="list-item collection-item">

@@ -17,7 +17,7 @@ export class FishSpawner {
 
         const biomeMultiplier = this.preferenceMultiplier(zone.type, species.preferredBiome, species.secondaryBiomes);
         const depthMultiplier = this.preferenceMultiplier(baitDepth.id, species.preferredDepth, species.secondaryDepths);
-        const baitMultiplier = this.preferenceMultiplier(baitType.id, species.primaryBait, species.secondaryBaits);
+        const baitMultiplier = this.preferenceMultiplier(baitType.id, species.primaryBait, [species.secondaryBait]);
         if (biomeMultiplier <= 0 || depthMultiplier <= 0 || baitMultiplier <= 0) {
           return null;
         }

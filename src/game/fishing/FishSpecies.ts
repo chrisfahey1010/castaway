@@ -21,7 +21,7 @@ export interface FishSpecies {
   preferredDepth: BaitDepthId;
   secondaryDepths: BaitDepthId[];
   primaryBait: BaitTypeId;
-  secondaryBaits: BaitTypeId[];
+  secondaryBait: BaitTypeId;
   minDepth: number;
   maxDepth: number;
   minLengthCm: number;
