@@ -10,7 +10,7 @@ export const GAME_CONFIG = {
     acceleration: 20,
     maxSpeed: 18,
     drag: 0.95,
-    turnSpeed: 2.25,
+    turnSpeed: 1.125,
     collisionRadius: 2.2,
     shallowSpeedMultiplier: 0.82,
     reefSpeedMultiplier: 0.9
