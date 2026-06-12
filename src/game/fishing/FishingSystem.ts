@@ -27,7 +27,6 @@ export interface FishingSnapshot {
   castPower: number;
   tension: number;
   reelProgress: number;
-  hookedFishName: string | null;
   hookWindow: number;
   hookWindowRemaining: number;
 }
@@ -45,7 +44,6 @@ export class FishingSystem {
     castPower: 0,
     tension: 0,
     reelProgress: 0,
-    hookedFishName: null,
     hookWindow: 0,
     hookWindowRemaining: 0
   };
@@ -379,7 +377,6 @@ export class FishingSystem {
       castPower: this.state === "chargingCast" ? Math.min(1, this.chargeSeconds / GAME_CONFIG.fishing.maxChargeSeconds) : 0,
       tension: this.fightState?.tension ?? 0,
       reelProgress: this.fightState?.progress ?? 0,
-      hookedFishName: this.activeFish?.name ?? null,
       hookWindow: this.hookWindow,
       hookWindowRemaining: this.hookWindowRemaining
     };

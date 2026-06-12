@@ -177,7 +177,7 @@ export class Hud {
     const prompt = state.fishing.state === "idle" && !this.idlePromptVisible ? "" : promptForFishing(state.fishing, this.mobileViewport.matches);
     this.promptEl.textContent = prompt;
     this.promptEl.classList.toggle("hidden", prompt.length === 0);
-    this.subtleEl.textContent = `${state.rod.name} · ${state.line.name} · ${state.baitDepth.name} Depth${state.fishing.hookedFishName ? ` · ${state.fishing.hookedFishName}` : ""}`;
+    this.subtleEl.textContent = `${state.rod.name} · ${state.line.name} · ${state.baitDepth.name} Depth`;
     this.updateLineOptions(state.lines, state.line);
     this.updateBaitDepthOptions(state.baitDepths, state.baitDepth);
     this.setMeter(this.powerFill, "[data-power-text]", state.fishing.castPower, true);
