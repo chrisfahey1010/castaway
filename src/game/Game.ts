@@ -156,7 +156,6 @@ export class Game {
       const result = this.state.collectionLog.recordCatch(event.caught, event.species);
       this.state.records[event.caught.speciesId] = Math.max(this.state.records[event.caught.speciesId] ?? 0, event.caught.lengthCm);
       this.hud.showCatch(event.caught, result.isNewRecord);
-      this.hud.toasts.show(result.isFirstCatch ? `New species logged: ${event.caught.name}` : `Caught ${event.caught.name}`);
       this.persistState();
     }
 
