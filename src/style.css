@@ -141,6 +141,14 @@ body {
   color: #123247;
 }
 
+.line-option.locked {
+  cursor: not-allowed;
+  opacity: 0.68;
+  font-style: italic;
+  line-height: 1.25;
+  white-space: normal;
+}
+
 .buttons {
   display: flex;
   gap: 8px;

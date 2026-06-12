@@ -64,6 +64,7 @@ export class Game {
     this.equippedLine = getFishingLine(this.state.player.equippedLineId);
     this.equippedBaitType = getBaitType(this.state.player.equippedBaitTypeId);
     this.equippedBaitDepth = getBaitDepth(this.state.player.equippedBaitDepthId);
+    this.ensureUnlockedEquipment();
 
     this.world = new World(this.sceneBundle.scene, {
       palm: assets.getTexture("palmTree"),
@@ -148,6 +149,7 @@ export class Game {
       fishing: this.fishing.snapshot,
       inventory: this.state.inventory.caughtFish,
       collectionLog: this.state.collectionLog.entries,
+      progression: this.state.progression,
       playerPosition: this.player.raft.root.position,
       camera: this.sceneBundle.camera
     });
@@ -171,7 +173,12 @@ export class Game {
       this.state.inventory.add(event.caught);
       const result = this.state.collectionLog.recordCatch(event.caught, event.species);
       this.state.records[event.caught.speciesId] = Math.max(this.state.records[event.caught.speciesId] ?? 0, event.caught.lengthCm);
+      const unlocks = this.state.progression.recordCatch(event.caught.weightG, this.equippedBaitType.id);
       this.hud.showCatch(event.caught, result.isNewRecord);
+      for (const unlock of unlocks) {
+        const baitSuffix = unlock.kind === "bait" ? " bait" : "";
+        this.hud.toasts.show(`Congratulations! You unlocked ${unlock.name}${baitSuffix}!`);
+      }
       this.persistState();
     }
 
@@ -190,9 +197,29 @@ export class Game {
     window.location.reload();
   }
 
+  private ensureUnlockedEquipment(): void {
+    if (!this.state.progression.isLineUnlocked(this.equippedLine.id)) {
+      this.equippedLine = startingFishingLine;
+    }
+
+    if (!this.state.progression.isBaitTypeUnlocked(this.equippedBaitType.id)) {
+      this.equippedBaitType = startingBaitType;
+    }
+
+    this.state.player.equippedLineId = this.equippedLine.id;
+    this.state.player.equippedBaitTypeId = this.equippedBaitType.id;
+    this.state.player.equippedBaitDepthId = this.equippedBaitDepth.id;
+  }
+
   private selectLine(lineId: string): void {
     if (this.fishing && this.fishing.state !== "idle") {
       this.hud?.toasts.show("Change fishing line before casting.");
+      return;
+    }
+
+    const lockLabel = this.state.progression.getLineLockLabel(lineId);
+    if (lockLabel) {
+      this.hud?.toasts.show(lockLabel);
       return;
     }
 
@@ -205,6 +232,12 @@ export class Game {
   private selectBaitType(baitTypeId: string): void {
     if (this.fishing && this.fishing.state !== "idle") {
       this.hud?.toasts.show("Select bait before casting.");
+      return;
+    }
+
+    const lockLabel = this.state.progression.getBaitTypeLockLabel(baitTypeId);
+    if (lockLabel) {
+      this.hud?.toasts.show(lockLabel);
       return;
     }
 

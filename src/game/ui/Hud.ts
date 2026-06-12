@@ -7,6 +7,7 @@ import type { FishingSnapshot } from "../fishing/FishingSystem";
 import type { RaftControlInput } from "../input/InputManager";
 import type { CaughtFish } from "../inventory/Inventory";
 import type { FishCollectionEntry } from "../inventory/CollectionLog";
+import type { ProgressionState } from "../state/ProgressionState";
 import { renderCollectionLog } from "./CollectionLogUI";
 import { promptForFishing } from "./FishingUI";
 import { formatFishWeight } from "./formatters";
@@ -25,6 +26,7 @@ export interface HudState {
   fishing: FishingSnapshot;
   inventory: CaughtFish[];
   collectionLog: Record<string, FishCollectionEntry>;
+  progression: ProgressionState;
   playerPosition: Vector3;
   camera: Camera;
 }
@@ -204,8 +206,8 @@ export class Hud {
     this.promptEl.textContent = prompt;
     this.promptEl.classList.toggle("hidden", prompt.length === 0);
     this.subtleEl.textContent = `${state.rod.name} · ${state.line.name} · ${state.baitType.name} · ${state.baitDepth.name} Depth`;
-    this.updateLineOptions(state.lines, state.line);
-    this.updateBaitTypeOptions(state.baitTypes, state.baitType);
+    this.updateLineOptions(state.lines, state.line, state.progression);
+    this.updateBaitTypeOptions(state.baitTypes, state.baitType, state.progression);
     this.updateBaitDepthOptions(state.baitDepths, state.baitDepth);
     this.updatePlayerMeter(state);
     const inventoryHtml = `<button type="button" class="drawer-close" data-drawer-close aria-label="Close inventory">x</button><h2>Inventory</h2>${renderInventory(state.inventory)}`;
@@ -282,15 +284,18 @@ export class Hud {
     }
   }
 
-  private updateLineOptions(lines: FishingLine[], selectedLine: FishingLine): void {
-    const key = `${selectedLine.id}:${lines.map((line) => line.id).join(",")}`;
+  private updateLineOptions(lines: FishingLine[], selectedLine: FishingLine, progression: ProgressionState): void {
+    const key = `${selectedLine.id}:${lines.map((line) => `${line.id}:${progression.getLineLockLabel(line.id) ?? "unlocked"}`).join(",")}`;
     if (key === this.lineOptionsKey) {
       return;
     }
 
     this.lineOptionsKey = key;
     this.lineOptionsEl.innerHTML = lines
-      .map((line) => `<button type="button" class="line-option${line.id === selectedLine.id ? " selected" : ""}" data-line-id="${line.id}">${line.name}</button>`)
+      .map((line) => {
+        const lockLabel = progression.getLineLockLabel(line.id);
+        return `<button type="button" class="line-option${line.id === selectedLine.id ? " selected" : ""}${lockLabel ? " locked" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-line-id="${line.id}"`}>${lockLabel ?? line.name}</button>`;
+      })
       .join("");
   }
 
@@ -306,15 +311,18 @@ export class Hud {
       .join("");
   }
 
-  private updateBaitTypeOptions(baitTypes: BaitType[], selectedBaitType: BaitType): void {
-    const key = `${selectedBaitType.id}:${baitTypes.map((baitType) => baitType.id).join(",")}`;
+  private updateBaitTypeOptions(baitTypes: BaitType[], selectedBaitType: BaitType, progression: ProgressionState): void {
+    const key = `${selectedBaitType.id}:${baitTypes.map((baitType) => `${baitType.id}:${progression.getBaitTypeLockLabel(baitType.id) ?? "unlocked"}`).join(",")}`;
     if (key === this.baitTypeOptionsKey) {
       return;
     }
 
     this.baitTypeOptionsKey = key;
     this.baitTypeOptionsEl.innerHTML = baitTypes
-      .map((baitType) => `<button type="button" class="line-option${baitType.id === selectedBaitType.id ? " selected" : ""}" data-bait-type-id="${baitType.id}">${baitType.name}</button>`)
+      .map((baitType) => {
+        const lockLabel = progression.getBaitTypeLockLabel(baitType.id);
+        return `<button type="button" class="line-option${baitType.id === selectedBaitType.id ? " selected" : ""}${lockLabel ? " locked" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-bait-type-id="${baitType.id}"`}>${lockLabel ?? baitType.name}</button>`;
+      })
       .join("");
   }
 

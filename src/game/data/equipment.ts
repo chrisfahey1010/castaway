@@ -77,8 +77,8 @@ export const startingFishingLine = fishingLines[0];
 
 export const baitTypes: BaitType[] = [
   {
-    id: "pork",
-    name: "Salted Pork"
+    id: "questionable-seaweed",
+    name: "Tasty Kelp"
   },
   {
     id: "coconut-grub",
@@ -89,12 +89,12 @@ export const baitTypes: BaitType[] = [
     name: "Crab Meat"
   },
   {
-    id: "questionable-seaweed",
-    name: "Tasty Kelp"
+    id: "pork",
+    name: "Salted Pork"
   }
 ];
 
-export const startingBaitType = baitTypes[3];
+export const startingBaitType = baitTypes[0];
 
 export const baitDepths: BaitDepth[] = [
   {
