@@ -6,7 +6,7 @@ export interface CaughtFish {
   name: string;
   rarity: FishRarity;
   lengthCm: number;
-  weightKg: number;
+  weightG: number;
   value: number;
   zoneName: string;
   spriteUrl?: string;

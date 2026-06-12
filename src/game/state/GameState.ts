@@ -14,7 +14,7 @@ export interface SaveGame {
 }
 
 export class GameState {
-  readonly version = 1;
+  readonly version = 2;
   readonly player = new PlayerState();
   readonly inventory = new Inventory();
   readonly collectionLog = new CollectionLog();

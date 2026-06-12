@@ -26,6 +26,8 @@ export interface FishSpecies {
   maxDepth: number;
   minLengthCm: number;
   maxLengthCm: number;
+  minWeightG: number;
+  maxWeightG: number;
   trophyLengthCm: number;
   baseValue: number;
   biteChanceModifier: number;

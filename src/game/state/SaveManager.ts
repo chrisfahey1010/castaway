@@ -1,9 +1,14 @@
 import type { GameState, SaveGame } from "./GameState";
 
-const SAVE_KEY = "castaway.save.v1";
+const LEGACY_SAVE_KEYS = ["castaway.save.v1"];
+const SAVE_KEY = "castaway.save.v2";
 
 export class SaveManager {
   load(state: GameState): void {
+    for (const key of LEGACY_SAVE_KEYS) {
+      window.localStorage.removeItem(key);
+    }
+
     const raw = window.localStorage.getItem(SAVE_KEY);
     if (!raw) {
       return;

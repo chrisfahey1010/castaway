@@ -2,6 +2,7 @@ import type { FishCollectionEntry } from "../inventory/CollectionLog";
 import { getBaitDepth, getBaitType } from "../data/equipment";
 import { getFishSpecies } from "../data/fishSpecies";
 import type { FishingZoneType } from "../fishing/FishSpecies";
+import { formatFishWeight } from "./formatters";
 
 export function renderCollectionLog(entries: Record<string, FishCollectionEntry>): string {
   const list = Object.values(entries);
@@ -26,7 +27,7 @@ export function renderCollectionLog(entries: Record<string, FishCollectionEntry>
       return `<div class="list-item collection-item">
         ${spriteUrl ? `<img class="collection-sprite" src="${spriteUrl}" alt="${entry.name}" draggable="false">` : ""}
         <div class="collection-details">
-          <div class="collection-row-top"><span><strong>${entry.name}</strong><br><small>${entry.description}</small></span><strong>${(entry.bestWeightKg ?? 0).toFixed(1)} kg<br><small>x${entry.totalCaught}</small></strong></div>
+          <div class="collection-row-top"><span><strong>${entry.name}</strong><br><small>${entry.description}</small></span><strong>${formatFishWeight(entry.bestWeightG ?? 0)}<br><small>x${entry.totalCaught}</small></strong></div>
           <div class="collection-facts"><span>Biomes: ${biomes}</span><span>Depths: ${depths}</span><span>Baits: ${baits}</span></div>
         </div>
       </div>`;

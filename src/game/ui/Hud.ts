@@ -9,6 +9,7 @@ import type { CaughtFish } from "../inventory/Inventory";
 import type { FishCollectionEntry } from "../inventory/CollectionLog";
 import { renderCollectionLog } from "./CollectionLogUI";
 import { promptForFishing } from "./FishingUI";
+import { formatFishWeight } from "./formatters";
 import { renderInventory } from "./InventoryUI";
 import { Toasts } from "./Toasts";
 
@@ -231,7 +232,7 @@ export class Hud {
       <div class="catch-title">Caught!</div>
       ${spriteMarkup}
       <div class="catch-name">${caught.name}</div>
-      <div class="catch-meta">${caught.lengthCm} cm · ${caught.weightKg} kg · ${caught.rarity}</div>
+      <div class="catch-meta">${caught.lengthCm} cm · ${formatFishWeight(caught.weightG)} · ${caught.rarity}</div>
       <div class="catch-meta">${caught.value} shells${isNewRecord ? " · New record!" : ""}</div>
     `;
     this.catchCard.classList.add("visible");

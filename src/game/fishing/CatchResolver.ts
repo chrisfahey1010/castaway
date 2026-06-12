@@ -7,7 +7,13 @@ import type { FishSpecies } from "./FishSpecies";
 export class CatchResolver {
   resolve(species: FishSpecies, zone: FishingZone): CaughtFish {
     const lengthCm = randomRange(species.minLengthCm, species.maxLengthCm);
-    const weightKg = Math.max(0.1, (lengthCm / 100) ** 3 * (species.fight.strength + 0.8) * 4.8);
+    const lengthRange = species.maxLengthCm - species.minLengthCm;
+    const lengthRatio = lengthRange > 0 ? (lengthCm - species.minLengthCm) / lengthRange : 0;
+    const expectedWeightG = species.minWeightG + (species.maxWeightG - species.minWeightG) * lengthRatio ** 3;
+    const weightG = Math.min(
+      species.maxWeightG,
+      Math.max(species.minWeightG, Math.round(expectedWeightG * randomRange(0.9, 1.1)))
+    );
     const rarityModifier = catchValueModifiers.find((entry) => entry.rarity === species.rarity)?.multiplier ?? 1;
     const trophyBonus = lengthCm >= species.trophyLengthCm ? 1.4 : 1;
 
@@ -17,7 +23,7 @@ export class CatchResolver {
       name: species.name,
       rarity: species.rarity,
       lengthCm: Math.round(lengthCm * 10) / 10,
-      weightKg: Math.round(weightKg * 10) / 10,
+      weightG,
       value: Math.round(species.baseValue * rarityModifier * trophyBonus * (lengthCm / species.minLengthCm)),
       zoneName: zone.name,
       spriteUrl: species.spriteUrl,
