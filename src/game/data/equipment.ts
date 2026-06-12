@@ -15,6 +15,13 @@ export interface FishingLine {
   colorHex: string;
 }
 
+export type BaitDepthId = "shallow" | "medium" | "deep";
+
+export interface BaitDepth {
+  id: BaitDepthId;
+  name: string;
+}
+
 export const rods: Rod[] = [
   {
     id: "driftwood-rod",
@@ -62,6 +69,27 @@ export const fishingLines: FishingLine[] = [
 
 export const startingFishingLine = fishingLines[0];
 
+export const baitDepths: BaitDepth[] = [
+  {
+    id: "shallow",
+    name: "Shallow"
+  },
+  {
+    id: "medium",
+    name: "Medium"
+  },
+  {
+    id: "deep",
+    name: "Deep"
+  }
+];
+
+export const startingBaitDepth = baitDepths[0];
+
 export function getFishingLine(id: string): FishingLine {
   return fishingLines.find((line) => line.id === id) ?? startingFishingLine;
+}
+
+export function getBaitDepth(id: string): BaitDepth {
+  return baitDepths.find((depth) => depth.id === id) ?? startingBaitDepth;
 }

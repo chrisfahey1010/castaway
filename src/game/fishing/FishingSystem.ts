@@ -6,7 +6,7 @@ import type { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import type { Scene } from "@babylonjs/core/scene";
 import { GAME_CONFIG } from "../constants";
 import type { FishingZone } from "../data/fishingZones";
-import type { FishingLine, Rod } from "../data/equipment";
+import type { BaitDepth, FishingLine, Rod } from "../data/equipment";
 import type { InputManager } from "../input/InputManager";
 import type { CaughtFish } from "../inventory/Inventory";
 import type { AudioManager } from "../audio/AudioManager";
@@ -82,7 +82,7 @@ export class FishingSystem {
     this.lineMesh.isVisible = false;
   }
 
-  update(input: InputManager, world: World, raftPosition: Vector3, lineAnchorPosition: Vector3, rod: Rod, line: FishingLine, deltaSeconds: number): void {
+  update(input: InputManager, world: World, raftPosition: Vector3, lineAnchorPosition: Vector3, rod: Rod, line: FishingLine, baitDepth: BaitDepth, deltaSeconds: number): void {
     const raftDelta = this.lastRaftPosition ? raftPosition.subtract(this.lastRaftPosition) : Vector3.Zero();
 
     switch (this.state) {
@@ -90,10 +90,10 @@ export class FishingSystem {
         this.updateIdle(input);
         break;
       case "chargingCast":
-        this.updateCharging(input, raftPosition, lineAnchorPosition, rod, world, deltaSeconds);
+        this.updateCharging(input, raftPosition, lineAnchorPosition, rod, world, baitDepth, deltaSeconds);
         break;
       case "casting":
-        this.updateCasting(world, deltaSeconds);
+        this.updateCasting(world, baitDepth, deltaSeconds);
         break;
       case "waitingForBite":
         this.updateWaiting(world, rod, deltaSeconds);
@@ -131,7 +131,7 @@ export class FishingSystem {
     }
   }
 
-  private updateCharging(input: InputManager, raftPosition: Vector3, lineAnchorPosition: Vector3, rod: Rod, world: World, deltaSeconds: number): void {
+  private updateCharging(input: InputManager, raftPosition: Vector3, lineAnchorPosition: Vector3, rod: Rod, world: World, baitDepth: BaitDepth, deltaSeconds: number): void {
     this.chargeSeconds = Math.min(GAME_CONFIG.fishing.maxChargeSeconds, this.chargeSeconds + deltaSeconds);
     const plan = this.castSystem.planCast(raftPosition, input.pointerWorld, this.chargeSeconds, rod);
     this.castTarget = plan.target;
@@ -139,6 +139,12 @@ export class FishingSystem {
     if (!input.interactDown || input.interactReleased) {
       if (!world.isWaterPosition(this.castTarget)) {
         this.failCast("The bobber clattered onto land. Aim for open water.");
+        return;
+      }
+
+      const zone = world.getZoneAt(this.castTarget);
+      if (zone && !this.isBaitDepthAllowed(zone, baitDepth)) {
+        this.failCast(this.baitDepthTooDeepMessage(zone, baitDepth));
         return;
       }
 
@@ -152,7 +158,7 @@ export class FishingSystem {
     }
   }
 
-  private updateCasting(world: World, deltaSeconds: number): void {
+  private updateCasting(world: World, baitDepth: BaitDepth, deltaSeconds: number): void {
     this.castElapsed += deltaSeconds;
     const progress = Math.min(1, this.castElapsed / this.castTravelSeconds);
     const arcHeight = Math.sin(progress * Math.PI) * 3.6;
@@ -171,7 +177,12 @@ export class FishingSystem {
         return;
       }
 
-      this.activeFish = this.fishSpawner.pickFish(this.activeZone);
+      this.activeFish = this.fishSpawner.pickFish(this.activeZone, baitDepth);
+      if (!this.activeFish) {
+        this.failCast("No fish are biting at that bait depth.");
+        return;
+      }
+
       this.biteTimer = this.biteSystem.nextBiteSeconds(this.activeFish);
       this.state = "waitingForBite";
     }
@@ -326,6 +337,40 @@ export class FishingSystem {
     }
 
     return -movementTowardBobber * GAME_CONFIG.fishing.boatAwayTensionGain;
+  }
+
+  private isBaitDepthAllowed(zone: FishingZone, baitDepth: BaitDepth): boolean {
+    switch (zone.type) {
+      case "lagoon":
+        return baitDepth.id === "shallow";
+      case "reef":
+        return baitDepth.id === "shallow" || baitDepth.id === "medium";
+      case "deep":
+        return true;
+    }
+  }
+
+  private baitDepthTooDeepMessage(zone: FishingZone, baitDepth: BaitDepth): string {
+    return `${baitDepth.name} bait is too deep for the ${zone.name}. Select ${this.formatDepthList(this.allowedBaitDepthNames(zone))} bait depth to cast here.`;
+  }
+
+  private allowedBaitDepthNames(zone: FishingZone): string[] {
+    switch (zone.type) {
+      case "lagoon":
+        return ["Shallow"];
+      case "reef":
+        return ["Shallow", "Medium"];
+      case "deep":
+        return ["Shallow", "Medium", "Deep"];
+    }
+  }
+
+  private formatDepthList(names: string[]): string {
+    if (names.length <= 1) {
+      return names[0] ?? "Shallow";
+    }
+
+    return `${names.slice(0, -1).join(", ")} or ${names[names.length - 1]}`;
   }
 
   private updateSnapshot(): void {

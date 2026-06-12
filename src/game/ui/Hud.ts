@@ -1,4 +1,4 @@
-import type { FishingLine, Rod } from "../data/equipment";
+import type { BaitDepth, FishingLine, Rod } from "../data/equipment";
 import { getFishSpriteUrl } from "../data/fishSpecies";
 import type { FishingZone } from "../data/fishingZones";
 import type { FishingSnapshot } from "../fishing/FishingSystem";
@@ -15,6 +15,8 @@ export interface HudState {
   rod: Rod;
   line: FishingLine;
   lines: FishingLine[];
+  baitDepth: BaitDepth;
+  baitDepths: BaitDepth[];
   fishing: FishingSnapshot;
   inventory: CaughtFish[];
   collectionLog: Record<string, FishCollectionEntry>;
@@ -29,6 +31,9 @@ export class Hud {
   private readonly lineOptionsEl: HTMLElement;
   private readonly lineSelectorEl: HTMLElement;
   private readonly lineToggleButton: HTMLButtonElement;
+  private readonly baitDepthOptionsEl: HTMLElement;
+  private readonly baitDepthSelectorEl: HTMLElement;
+  private readonly baitDepthToggleButton: HTMLButtonElement;
   private readonly helpCard: HTMLElement;
   private readonly powerFill: HTMLElement;
   private readonly tensionFill: HTMLElement;
@@ -43,8 +48,9 @@ export class Hud {
   private inventoryHtml = "";
   private logHtml = "";
   private lineOptionsKey = "";
+  private baitDepthOptionsKey = "";
 
-  constructor(root: HTMLElement, onLineSelected: (lineId: string) => void, onMoveControlsChanged: (controls: RaftControlInput) => void) {
+  constructor(root: HTMLElement, onLineSelected: (lineId: string) => void, onBaitDepthSelected: (baitDepthId: string) => void, onMoveControlsChanged: (controls: RaftControlInput) => void) {
     this.root = root;
     root.innerHTML = `
       <div class="hud">
@@ -60,6 +66,10 @@ export class Hud {
               <div class="line-selector" data-line-selector>
                 <button type="button" class="line-select-button" data-line-toggle aria-expanded="false">Select Line</button>
                 <div class="line-menu" data-line-options></div>
+              </div>
+              <div class="line-selector" data-bait-depth-selector>
+                <button type="button" class="line-select-button" data-bait-depth-toggle aria-expanded="false">Select Bait Depth</button>
+                <div class="line-menu" data-bait-depth-options></div>
               </div>
               <div class="status-actions">
                 <button type="button" data-inventory>Inventory</button>
@@ -99,7 +109,8 @@ export class Hud {
         <button type="button" class="drawer-close" data-help-close aria-label="Close instructions">x</button>
         <h2>How to Play</h2>
         <p>Move the raft with WASD, arrow keys, or the on-screen arrows on mobile.</p>
-        <p>Aim at the water, then hold and release to cast. Tap during a bite, then hold to reel.</p>
+        <p>Select line and bait depth before casting. Aim at the water, then hold and release to cast.</p>
+        <p>Tap during a bite, then hold to reel.</p>
         <p>Steer toward the bobber while reeling to reduce line tension.</p>
       </div>
       <div class="drawer" data-inventory-drawer></div>
@@ -112,6 +123,9 @@ export class Hud {
     this.lineOptionsEl = this.must(root, "[data-line-options]");
     this.lineSelectorEl = this.must(root, "[data-line-selector]");
     this.lineToggleButton = this.must(root, "[data-line-toggle]") as HTMLButtonElement;
+    this.baitDepthOptionsEl = this.must(root, "[data-bait-depth-options]");
+    this.baitDepthSelectorEl = this.must(root, "[data-bait-depth-selector]");
+    this.baitDepthToggleButton = this.must(root, "[data-bait-depth-toggle]") as HTMLButtonElement;
     this.powerFill = this.must(root, "[data-power]");
     this.tensionFill = this.must(root, "[data-tension]");
     this.progressFill = this.must(root, "[data-progress]");
@@ -129,6 +143,7 @@ export class Hud {
     this.must(root, "[data-help-toggle]").addEventListener("click", () => this.toggleHelp());
     this.must(root, "[data-help-close]").addEventListener("click", () => this.setHelpVisible(false));
     this.lineToggleButton.addEventListener("click", () => this.toggleLineMenu());
+    this.baitDepthToggleButton.addEventListener("click", () => this.toggleBaitDepthMenu());
     root.addEventListener("click", (event) => {
       const closeButton = (event.target as HTMLElement).closest("[data-drawer-close]");
       if (closeButton) {
@@ -140,6 +155,13 @@ export class Hud {
       if (button) {
         onLineSelected(button.dataset.lineId ?? "");
         this.setLineMenuOpen(false);
+      }
+    });
+    this.baitDepthOptionsEl.addEventListener("click", (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-bait-depth-id]");
+      if (button) {
+        onBaitDepthSelected(button.dataset.baitDepthId ?? "");
+        this.setBaitDepthMenuOpen(false);
       }
     });
     this.setupMobileControls(this.must(root, "[data-mobile-controls]"), onMoveControlsChanged);
@@ -155,8 +177,9 @@ export class Hud {
     const prompt = state.fishing.state === "idle" && !this.idlePromptVisible ? "" : promptForFishing(state.fishing, this.mobileViewport.matches);
     this.promptEl.textContent = prompt;
     this.promptEl.classList.toggle("hidden", prompt.length === 0);
-    this.subtleEl.textContent = `${state.rod.name} · ${state.line.name}${state.fishing.hookedFishName ? ` · ${state.fishing.hookedFishName}` : ""}`;
+    this.subtleEl.textContent = `${state.rod.name} · ${state.line.name} · ${state.baitDepth.name} Depth${state.fishing.hookedFishName ? ` · ${state.fishing.hookedFishName}` : ""}`;
     this.updateLineOptions(state.lines, state.line);
+    this.updateBaitDepthOptions(state.baitDepths, state.baitDepth);
     this.setMeter(this.powerFill, "[data-power-text]", state.fishing.castPower, true);
     this.setMeter(this.tensionFill, "[data-tension-text]", state.fishing.tension / (state.rod.tensionLimit * state.line.tensionLimitMultiplier), true);
     this.setMeter(this.progressFill, "[data-progress-text]", state.fishing.reelProgress);
@@ -219,13 +242,36 @@ export class Hud {
       .join("");
   }
 
+  private updateBaitDepthOptions(depths: BaitDepth[], selectedDepth: BaitDepth): void {
+    const key = `${selectedDepth.id}:${depths.map((depth) => depth.id).join(",")}`;
+    if (key === this.baitDepthOptionsKey) {
+      return;
+    }
+
+    this.baitDepthOptionsKey = key;
+    this.baitDepthOptionsEl.innerHTML = depths
+      .map((depth) => `<button type="button" class="line-option${depth.id === selectedDepth.id ? " selected" : ""}" data-bait-depth-id="${depth.id}">${depth.name}</button>`)
+      .join("");
+  }
+
   private toggleLineMenu(): void {
+    this.setBaitDepthMenuOpen(false);
     this.setLineMenuOpen(!this.lineSelectorEl.classList.contains("open"));
   }
 
   private setLineMenuOpen(isOpen: boolean): void {
     this.lineSelectorEl.classList.toggle("open", isOpen);
     this.lineToggleButton.setAttribute("aria-expanded", String(isOpen));
+  }
+
+  private toggleBaitDepthMenu(): void {
+    this.setLineMenuOpen(false);
+    this.setBaitDepthMenuOpen(!this.baitDepthSelectorEl.classList.contains("open"));
+  }
+
+  private setBaitDepthMenuOpen(isOpen: boolean): void {
+    this.baitDepthSelectorEl.classList.toggle("open", isOpen);
+    this.baitDepthToggleButton.setAttribute("aria-expanded", String(isOpen));
   }
 
   private toggleHelp(): void {
