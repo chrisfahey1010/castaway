@@ -126,7 +126,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 24,
     biteChanceModifier: 0.72,
     hookWindowModifier: 0.9,
-    fight: { stamina: 1.2, strength: 1.05, erraticness: 0.42, baseTensionGain: 0.31, progressResistance: 1.18 },
+    fight: { stamina: 1.2, strength: 1.07, erraticness: 0.42, baseTensionGain: 0.35, progressResistance: 1.18 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/red_snapper.png",
     color: "#ff5b52"
