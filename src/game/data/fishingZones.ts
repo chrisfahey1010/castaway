@@ -31,7 +31,10 @@ export const fishingZones: FishingZone[] = [
     fishTable: [
       { fishId: "lagoon-minnow", weight: 42 },
       { fishId: "silver-sardine", weight: 30 },
-      { fishId: "needlefish", weight: 9 }
+      { fishId: "yellow-goatfish", weight: 18 },
+      { fishId: "needlefish", weight: 9 },
+      { fishId: "bonefish", weight: 6 },
+      { fishId: "picasso-triggerfish", weight: 3 }
     ]
   },
   {
@@ -46,10 +49,16 @@ export const fishingZones: FishingZone[] = [
     fishTable: [
       { fishId: "silver-sardine", weight: 18 },
       { fishId: "blue-tang", weight: 28 },
+      { fishId: "moorish-idol", weight: 18 },
       { fishId: "parrotfish", weight: 16 },
+      { fishId: "yellow-goatfish", weight: 11 },
       { fishId: "red-snapper", weight: 11 },
       { fishId: "needlefish", weight: 12 },
-      { fishId: "barracuda", weight: 4 }
+      { fishId: "picasso-triggerfish", weight: 9 },
+      { fishId: "bonefish", weight: 3 },
+      { fishId: "barracuda", weight: 4 },
+      { fishId: "coral-grouper", weight: 3 },
+      { fishId: "giant-trevally", weight: 2 }
     ]
   },
   {
@@ -64,7 +73,11 @@ export const fishingZones: FishingZone[] = [
     fishTable: [
       { fishId: "red-snapper", weight: 12 },
       { fishId: "barracuda", weight: 9 },
-      { fishId: "mahi-mahi", weight: 6 }
+      { fishId: "mahi-mahi", weight: 6 },
+      { fishId: "coral-grouper", weight: 5 },
+      { fishId: "giant-trevally", weight: 5 },
+      { fishId: "yellowfin-tuna", weight: 4 },
+      { fishId: "blue-marlin", weight: 1 }
     ]
   }
 ];
