@@ -46,6 +46,7 @@ export class GameState {
     this.collectionLog.load(save.collectionLog ?? {}, save.inventory ?? []);
     this.records = save.records ?? {};
     this.progression.applySnapshot(save.progression);
+    this.progression.setUniqueSpeciesCaught(Math.max(this.progression.uniqueSpeciesCaught, Object.keys(this.collectionLog.entries).length));
     this.settings = save.settings ?? this.settings;
   }
 }

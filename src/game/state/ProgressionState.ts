@@ -1,16 +1,19 @@
-import { baitTypes, fishingLines, type BaitTypeId } from "../data/equipment";
+import { baitTypes, fishingLines, rods, type BaitTypeId } from "../data/equipment";
 
 const UNLOCK_REQUIREMENT = 5;
+const BAMBOO_ROD_UNIQUE_SPECIES_REQUIREMENT = 6;
+const REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT = 12;
 
 export interface ProgressionSnapshot {
   catchesAtLeast300G?: number;
   catchesAtLeast500G?: number;
   catchesAtLeast1000G?: number;
+  uniqueSpeciesCaught?: number;
   catchesByBait?: Partial<Record<BaitTypeId, number>>;
 }
 
 export interface ProgressionUnlock {
-  kind: "line" | "bait";
+  kind: "line" | "bait" | "rod";
   name: string;
 }
 
@@ -23,6 +26,7 @@ const baitUnlockRequirements: Partial<Record<BaitTypeId, BaitTypeId>> = {
 export class ProgressionState {
   catchesAtLeast300G = 0;
   catchesAtLeast1000G = 0;
+  uniqueSpeciesCaught = 0;
   catchesByBait: Record<BaitTypeId, number> = {
     "questionable-seaweed": 0,
     "coconut-grub": 0,
@@ -34,6 +38,7 @@ export class ProgressionState {
     return {
       catchesAtLeast300G: this.catchesAtLeast300G,
       catchesAtLeast1000G: this.catchesAtLeast1000G,
+      uniqueSpeciesCaught: this.uniqueSpeciesCaught,
       catchesByBait: { ...this.catchesByBait }
     };
   }
@@ -41,12 +46,13 @@ export class ProgressionState {
   applySnapshot(snapshot?: ProgressionSnapshot): void {
     this.catchesAtLeast300G = this.cleanCount(snapshot?.catchesAtLeast300G ?? snapshot?.catchesAtLeast500G);
     this.catchesAtLeast1000G = this.cleanCount(snapshot?.catchesAtLeast1000G);
+    this.uniqueSpeciesCaught = this.cleanCount(snapshot?.uniqueSpeciesCaught);
     for (const baitType of baitTypes) {
       this.catchesByBait[baitType.id] = this.cleanCount(snapshot?.catchesByBait?.[baitType.id]);
     }
   }
 
-  recordCatch(weightG: number, baitTypeId: BaitTypeId): ProgressionUnlock[] {
+  recordCatch(weightG: number, baitTypeId: BaitTypeId, uniqueSpeciesCaught: number): ProgressionUnlock[] {
     const unlockedBefore = this.unlockedNamesSet();
 
     if (weightG >= 300) {
@@ -58,12 +64,21 @@ export class ProgressionState {
     }
 
     this.catchesByBait[baitTypeId] += 1;
+    this.setUniqueSpeciesCaught(uniqueSpeciesCaught);
 
     return this.unlockedNames().filter((unlock) => !unlockedBefore.has(this.unlockKey(unlock)));
   }
 
+  setUniqueSpeciesCaught(count: number): void {
+    this.uniqueSpeciesCaught = this.cleanCount(count);
+  }
+
   isLineUnlocked(lineId: string): boolean {
     return this.getLineLockLabel(lineId) === null;
+  }
+
+  isRodUnlocked(rodId: string): boolean {
+    return this.getRodLockLabel(rodId) === null;
   }
 
   isBaitTypeUnlocked(baitTypeId: string): boolean {
@@ -77,6 +92,18 @@ export class ProgressionState {
 
     if (lineId === "heavy-line" && this.catchesAtLeast1000G < UNLOCK_REQUIREMENT) {
       return `Catch fish weighing 1.0 kg or more (${this.catchesAtLeast1000G}/${UNLOCK_REQUIREMENT})`;
+    }
+
+    return null;
+  }
+
+  getRodLockLabel(rodId: string): string | null {
+    if (rodId === "bamboo-rod" && this.uniqueSpeciesCaught < BAMBOO_ROD_UNIQUE_SPECIES_REQUIREMENT) {
+      return `Catch ${BAMBOO_ROD_UNIQUE_SPECIES_REQUIREMENT} unique fish species (${this.uniqueSpeciesCaught}/${BAMBOO_ROD_UNIQUE_SPECIES_REQUIREMENT})`;
+    }
+
+    if (rodId === "reinforced-rod" && this.uniqueSpeciesCaught < REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT) {
+      return `Catch ${REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT} unique fish species (${this.uniqueSpeciesCaught}/${REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT})`;
     }
 
     return null;
@@ -104,8 +131,11 @@ export class ProgressionState {
     const baitUnlocks = baitTypes
       .filter((baitType) => baitType.id !== "questionable-seaweed" && this.isBaitTypeUnlocked(baitType.id))
       .map((baitType) => ({ kind: "bait" as const, name: baitType.name }));
+    const rodUnlocks = rods
+      .filter((rod) => rod.id !== "driftwood-rod" && this.isRodUnlocked(rod.id))
+      .map((rod) => ({ kind: "rod" as const, name: rod.name }));
 
-    return [...lineUnlocks, ...baitUnlocks];
+    return [...lineUnlocks, ...baitUnlocks, ...rodUnlocks];
   }
 
   private unlockKey(unlock: ProgressionUnlock): string {

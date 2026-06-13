@@ -9,6 +9,8 @@ import {
   getBaitDepth,
   getBaitType,
   getFishingLine,
+  getRod,
+  rods,
   startingBaitDepth,
   startingBaitType,
   startingFishingLine,
@@ -61,6 +63,7 @@ export class Game {
     this.sceneBundle = createScene(this.engine);
     this.assetLoader = new AssetLoader(this.sceneBundle.scene);
     const assets = await this.assetLoader.load();
+    this.rod.equipped = getRod(this.state.player.equippedRodId);
     this.equippedLine = getFishingLine(this.state.player.equippedLineId);
     this.equippedBaitType = getBaitType(this.state.player.equippedBaitTypeId);
     this.equippedBaitDepth = getBaitDepth(this.state.player.equippedBaitDepthId);
@@ -89,6 +92,7 @@ export class Game {
     }
     this.hud = new Hud(
       hudRoot,
+      (rodId) => this.selectRod(rodId),
       (lineId) => this.selectLine(lineId),
       (baitTypeId) => this.selectBaitType(baitTypeId),
       (baitDepthId) => this.selectBaitDepth(baitDepthId),
@@ -141,6 +145,7 @@ export class Game {
     this.hud.update({
       zone,
       rod: this.rod.equipped,
+      rods,
       line: this.equippedLine,
       lines: fishingLines,
       baitType: this.equippedBaitType,
@@ -174,7 +179,7 @@ export class Game {
       this.state.inventory.add(event.caught);
       const result = this.state.collectionLog.recordCatch(event.caught, event.species);
       this.state.records[event.caught.speciesId] = Math.max(this.state.records[event.caught.speciesId] ?? 0, event.caught.lengthCm);
-      const unlocks = this.state.progression.recordCatch(event.caught.weightG, this.equippedBaitType.id);
+      const unlocks = this.state.progression.recordCatch(event.caught.weightG, this.equippedBaitType.id, Object.keys(this.state.collectionLog.entries).length);
       this.hud.showCatch(event.caught, result.isNewRecord);
       for (const unlock of unlocks) {
         const baitSuffix = unlock.kind === "bait" ? " bait" : "";
@@ -199,6 +204,10 @@ export class Game {
   }
 
   private ensureUnlockedEquipment(): void {
+    if (!this.state.progression.isRodUnlocked(this.rod.equipped.id)) {
+      this.rod.equipped = getRod("driftwood-rod");
+    }
+
     if (!this.state.progression.isLineUnlocked(this.equippedLine.id)) {
       this.equippedLine = startingFishingLine;
     }
@@ -207,9 +216,28 @@ export class Game {
       this.equippedBaitType = startingBaitType;
     }
 
+    this.state.player.equippedRodId = this.rod.equipped.id;
     this.state.player.equippedLineId = this.equippedLine.id;
     this.state.player.equippedBaitTypeId = this.equippedBaitType.id;
     this.state.player.equippedBaitDepthId = this.equippedBaitDepth.id;
+  }
+
+  private selectRod(rodId: string): void {
+    if (this.fishing && this.fishing.state !== "idle") {
+      this.hud?.toasts.show("Change fishing rod before casting.");
+      return;
+    }
+
+    const lockLabel = this.state.progression.getRodLockLabel(rodId);
+    if (lockLabel) {
+      this.hud?.toasts.show(lockLabel);
+      return;
+    }
+
+    this.rod.equipped = getRod(rodId);
+    this.state.player.equippedRodId = this.rod.equipped.id;
+    this.persistState();
+    this.hud?.toasts.show(`Equipped ${this.rod.equipped.name}`);
   }
 
   private selectLine(lineId: string): void {

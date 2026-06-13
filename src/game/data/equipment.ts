@@ -32,18 +32,26 @@ export const rods: Rod[] = [
   {
     id: "driftwood-rod",
     name: "Driftwood Rod",
+    castDistanceMultiplier: 0.85,
+    hookWindowModifier: 0.8,
+    tensionLimit: 0.9,
+    reelSpeed: 0.26
+  },
+  {
+    id: "bamboo-rod",
+    name: "Bamboo Rod",
     castDistanceMultiplier: 1,
     hookWindowModifier: 1,
     tensionLimit: 1,
     reelSpeed: 0.34
   },
   {
-    id: "bamboo-rod",
-    name: "Bamboo Rod",
-    castDistanceMultiplier: 1.12,
-    hookWindowModifier: 1.08,
-    tensionLimit: 1.08,
-    reelSpeed: 0.39
+    id: "reinforced-rod",
+    name: "Reinforced Rod",
+    castDistanceMultiplier: 1.15,
+    hookWindowModifier: 1.2,
+    tensionLimit: 1.1,
+    reelSpeed: 0.42
   }
 ];
 
@@ -115,6 +123,10 @@ export const startingBaitDepth = baitDepths[0];
 
 export function getFishingLine(id: string): FishingLine {
   return fishingLines.find((line) => line.id === id) ?? startingFishingLine;
+}
+
+export function getRod(id: string): Rod {
+  return rods.find((rod) => rod.id === id) ?? startingRod;
 }
 
 export function getBaitType(id: string): BaitType {

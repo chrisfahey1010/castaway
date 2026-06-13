@@ -1,6 +1,6 @@
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { GAME_CONFIG } from "../constants";
-import { getBaitDepth, getBaitType, startingBaitDepth, startingBaitType, startingFishingLine, startingRod } from "../data/equipment";
+import { getBaitDepth, getBaitType, getRod, startingBaitDepth, startingBaitType, startingFishingLine, startingRod } from "../data/equipment";
 
 export interface PlayerStateSnapshot {
   position: { x: number; z: number };
@@ -29,7 +29,7 @@ export class PlayerState {
 
   applySnapshot(snapshot: PlayerStateSnapshot): void {
     this.position = new Vector3(snapshot.position.x, 0, snapshot.position.z);
-    this.equippedRodId = snapshot.equippedRodId;
+    this.equippedRodId = getRod(snapshot.equippedRodId ?? startingRod.id).id;
     this.equippedLineId = snapshot.equippedLineId ?? startingFishingLine.id;
     this.equippedBaitTypeId = getBaitType(snapshot.equippedBaitTypeId ?? startingBaitType.id).id;
     this.equippedBaitDepthId = getBaitDepth(snapshot.equippedBaitDepthId ?? startingBaitDepth.id).id;

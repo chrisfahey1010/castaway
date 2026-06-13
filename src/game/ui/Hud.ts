@@ -17,6 +17,7 @@ import { Toasts } from "./Toasts";
 export interface HudState {
   zone: FishingZone | null;
   rod: Rod;
+  rods: Rod[];
   line: FishingLine;
   lines: FishingLine[];
   baitType: BaitType;
@@ -36,6 +37,9 @@ export class Hud {
   private readonly zoneEl: HTMLElement;
   private readonly promptEl: HTMLElement;
   private readonly subtleEl: HTMLElement;
+  private readonly rodOptionsEl: HTMLElement;
+  private readonly rodSelectorEl: HTMLElement;
+  private readonly rodToggleButton: HTMLButtonElement;
   private readonly lineOptionsEl: HTMLElement;
   private readonly lineSelectorEl: HTMLElement;
   private readonly lineToggleButton: HTMLButtonElement;
@@ -57,12 +61,14 @@ export class Hud {
   private idlePromptVisible = true;
   private inventoryHtml = "";
   private logHtml = "";
+  private rodOptionsKey = "";
   private lineOptionsKey = "";
   private baitTypeOptionsKey = "";
   private baitDepthOptionsKey = "";
 
   constructor(
     root: HTMLElement,
+    onRodSelected: (rodId: string) => void,
     onLineSelected: (lineId: string) => void,
     onBaitTypeSelected: (baitTypeId: string) => void,
     onBaitDepthSelected: (baitDepthId: string) => void,
@@ -80,6 +86,10 @@ export class Hud {
             <div class="prompt" data-prompt>Loading...</div>
             <div class="subtle" data-subtle></div>
             <div class="status-controls">
+              <div class="line-selector" data-rod-selector>
+                <button type="button" class="line-select-button" data-rod-toggle aria-expanded="false">Select Rod</button>
+                <div class="line-menu" data-rod-options></div>
+              </div>
               <div class="line-selector" data-line-selector>
                 <button type="button" class="line-select-button" data-line-toggle aria-expanded="false">Select Line</button>
                 <div class="line-menu" data-line-options></div>
@@ -133,6 +143,9 @@ export class Hud {
     this.zoneEl = this.must(root, "[data-zone]");
     this.promptEl = this.must(root, "[data-prompt]");
     this.subtleEl = this.must(root, "[data-subtle]");
+    this.rodOptionsEl = this.must(root, "[data-rod-options]");
+    this.rodSelectorEl = this.must(root, "[data-rod-selector]");
+    this.rodToggleButton = this.must(root, "[data-rod-toggle]") as HTMLButtonElement;
     this.lineOptionsEl = this.must(root, "[data-line-options]");
     this.lineSelectorEl = this.must(root, "[data-line-selector]");
     this.lineToggleButton = this.must(root, "[data-line-toggle]") as HTMLButtonElement;
@@ -162,6 +175,7 @@ export class Hud {
         onResetGame();
       }
     });
+    this.rodToggleButton.addEventListener("click", () => this.toggleRodMenu());
     this.lineToggleButton.addEventListener("click", () => this.toggleLineMenu());
     this.baitTypeToggleButton.addEventListener("click", () => this.toggleBaitTypeMenu());
     this.baitDepthToggleButton.addEventListener("click", () => this.toggleBaitDepthMenu());
@@ -169,6 +183,13 @@ export class Hud {
       const closeButton = (event.target as HTMLElement).closest("[data-drawer-close]");
       if (closeButton) {
         closeButton.closest(".drawer")?.classList.remove("visible");
+      }
+    });
+    this.rodOptionsEl.addEventListener("click", (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-rod-id]");
+      if (button) {
+        onRodSelected(button.dataset.rodId ?? "");
+        this.setRodMenuOpen(false);
       }
     });
     this.lineOptionsEl.addEventListener("click", (event) => {
@@ -206,6 +227,7 @@ export class Hud {
     this.promptEl.textContent = prompt;
     this.promptEl.classList.toggle("hidden", prompt.length === 0);
     this.subtleEl.textContent = `${state.rod.name} · ${state.line.name} · ${state.baitType.name} · ${state.baitDepth.name} Depth`;
+    this.updateRodOptions(state.rods, state.rod, state.progression);
     this.updateLineOptions(state.lines, state.line, state.progression);
     this.updateBaitTypeOptions(state.baitTypes, state.baitType, state.progression);
     this.updateBaitDepthOptions(state.baitDepths, state.baitDepth);
@@ -299,6 +321,21 @@ export class Hud {
       .join("");
   }
 
+  private updateRodOptions(rods: Rod[], selectedRod: Rod, progression: ProgressionState): void {
+    const key = `${selectedRod.id}:${rods.map((rod) => `${rod.id}:${progression.getRodLockLabel(rod.id) ?? "unlocked"}`).join(",")}`;
+    if (key === this.rodOptionsKey) {
+      return;
+    }
+
+    this.rodOptionsKey = key;
+    this.rodOptionsEl.innerHTML = rods
+      .map((rod) => {
+        const lockLabel = progression.getRodLockLabel(rod.id);
+        return `<button type="button" class="line-option${rod.id === selectedRod.id ? " selected" : ""}${lockLabel ? " locked" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-rod-id="${rod.id}"`}>${lockLabel ?? rod.name}</button>`;
+      })
+      .join("");
+  }
+
   private updateBaitDepthOptions(depths: BaitDepth[], selectedDepth: BaitDepth): void {
     const key = `${selectedDepth.id}:${depths.map((depth) => depth.id).join(",")}`;
     if (key === this.baitDepthOptionsKey) {
@@ -327,9 +364,22 @@ export class Hud {
   }
 
   private toggleLineMenu(): void {
+    this.setRodMenuOpen(false);
     this.setBaitTypeMenuOpen(false);
     this.setBaitDepthMenuOpen(false);
     this.setLineMenuOpen(!this.lineSelectorEl.classList.contains("open"));
+  }
+
+  private toggleRodMenu(): void {
+    this.setLineMenuOpen(false);
+    this.setBaitTypeMenuOpen(false);
+    this.setBaitDepthMenuOpen(false);
+    this.setRodMenuOpen(!this.rodSelectorEl.classList.contains("open"));
+  }
+
+  private setRodMenuOpen(isOpen: boolean): void {
+    this.rodSelectorEl.classList.toggle("open", isOpen);
+    this.rodToggleButton.setAttribute("aria-expanded", String(isOpen));
   }
 
   private setLineMenuOpen(isOpen: boolean): void {
@@ -338,12 +388,14 @@ export class Hud {
   }
 
   private toggleBaitDepthMenu(): void {
+    this.setRodMenuOpen(false);
     this.setLineMenuOpen(false);
     this.setBaitTypeMenuOpen(false);
     this.setBaitDepthMenuOpen(!this.baitDepthSelectorEl.classList.contains("open"));
   }
 
   private toggleBaitTypeMenu(): void {
+    this.setRodMenuOpen(false);
     this.setLineMenuOpen(false);
     this.setBaitDepthMenuOpen(false);
     this.setBaitTypeMenuOpen(!this.baitTypeSelectorEl.classList.contains("open"));
