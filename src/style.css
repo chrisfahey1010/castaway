@@ -175,9 +175,33 @@ button {
   place-items: center;
 }
 
+.help-toggle-button {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 3;
+  width: 48px;
+  height: 48px;
+  pointer-events: auto;
+  font-size: 22px;
+}
+
 .line-select-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   padding: 8px 12px;
   font-size: 12px;
+  white-space: nowrap;
+}
+
+.line-select-button::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
 }
 
 .mobile-controls {
@@ -362,7 +386,7 @@ button {
 .toasts {
   position: absolute;
   right: 18px;
-  bottom: 18px;
+  bottom: 78px;
   display: grid;
   gap: 8px;
 }
@@ -523,8 +547,14 @@ button {
     margin-top: 8px;
   }
 
+  .status-controls > .line-selector {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
   .status-actions {
     display: flex;
+    flex: 0 0 100%;
     gap: 5px;
   }
 
@@ -532,7 +562,18 @@ button {
   .line-select-button {
     padding: 8px clamp(6px, 2vw, 10px);
     font-size: clamp(10px, 2.9vw, 12px);
-    white-space: nowrap;
+    gap: 5px;
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .line-select-button::before {
+    border-left-width: 3px;
+    border-right-width: 3px;
+    border-top-width: 4px;
   }
 
   .hud-top > .buttons {
@@ -541,6 +582,14 @@ button {
 
   .line-menu {
     min-width: 148px;
+  }
+
+  .help-toggle-button {
+    right: 10px;
+    bottom: 12px;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
   }
 
   .meter {
@@ -613,7 +662,7 @@ button {
 
   .toasts {
     right: 10px;
-    bottom: 12px;
+    bottom: 66px;
   }
 
   .catch-card {

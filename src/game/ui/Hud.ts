@@ -36,7 +36,6 @@ export class Hud {
   readonly toasts: Toasts;
   private readonly zoneEl: HTMLElement;
   private readonly promptEl: HTMLElement;
-  private readonly subtleEl: HTMLElement;
   private readonly rodOptionsEl: HTMLElement;
   private readonly rodSelectorEl: HTMLElement;
   private readonly rodToggleButton: HTMLButtonElement;
@@ -81,10 +80,8 @@ export class Hud {
           <div class="panel status-panel">
             <div class="status-header">
               <div class="zone" data-zone>Shallows</div>
-              <button type="button" class="icon-button" data-help-toggle aria-label="Show instructions">?</button>
             </div>
             <div class="prompt" data-prompt>Loading...</div>
-            <div class="subtle" data-subtle></div>
             <div class="status-controls">
               <div class="line-selector" data-rod-selector>
                 <button type="button" class="line-select-button" data-rod-toggle aria-expanded="false">Select Rod</button>
@@ -123,6 +120,7 @@ export class Hud {
         <div class="player-meter" data-player-meter aria-hidden="true">
           <div class="meter"><div class="meter-fill" data-player-meter-fill></div></div>
         </div>
+        <button type="button" class="icon-button help-toggle-button" data-help-toggle aria-label="Show instructions">?</button>
       </div>
       <div class="catch-card" data-catch-card></div>
       <div class="help-card panel" data-help-card aria-hidden="true">
@@ -142,7 +140,6 @@ export class Hud {
 
     this.zoneEl = this.must(root, "[data-zone]");
     this.promptEl = this.must(root, "[data-prompt]");
-    this.subtleEl = this.must(root, "[data-subtle]");
     this.rodOptionsEl = this.must(root, "[data-rod-options]");
     this.rodSelectorEl = this.must(root, "[data-rod-selector]");
     this.rodToggleButton = this.must(root, "[data-rod-toggle]") as HTMLButtonElement;
@@ -226,7 +223,10 @@ export class Hud {
     const prompt = state.fishing.state === "idle" && !this.idlePromptVisible ? "" : promptForFishing(state.fishing, this.mobileViewport.matches);
     this.promptEl.textContent = prompt;
     this.promptEl.classList.toggle("hidden", prompt.length === 0);
-    this.subtleEl.textContent = `${state.rod.name} · ${state.line.name} · ${state.baitType.name} · ${state.baitDepth.name} Depth`;
+    this.setSelectorLabel(this.rodToggleButton, state.rod.name, "Select fishing rod");
+    this.setSelectorLabel(this.lineToggleButton, state.line.name, "Select fishing line");
+    this.setSelectorLabel(this.baitTypeToggleButton, `${state.baitType.name} Bait`, "Select bait");
+    this.setSelectorLabel(this.baitDepthToggleButton, `${state.baitDepth.name} Depth`, "Select bait depth");
     this.updateRodOptions(state.rods, state.rod, state.progression);
     this.updateLineOptions(state.lines, state.line, state.progression);
     this.updateBaitTypeOptions(state.baitTypes, state.baitType, state.progression);
@@ -304,6 +304,11 @@ export class Hud {
     } else {
       fill.style.width = `${percent}%`;
     }
+  }
+
+  private setSelectorLabel(button: HTMLButtonElement, label: string, ariaLabel: string): void {
+    button.textContent = label;
+    button.setAttribute("aria-label", ariaLabel);
   }
 
   private updateLineOptions(lines: FishingLine[], selectedLine: FishingLine, progression: ProgressionState): void {
