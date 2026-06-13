@@ -553,9 +553,11 @@ button {
   }
 
   .status-actions {
-    display: flex;
-    flex: 0 0 100%;
-    gap: 5px;
+    display: block;
+    flex: 0 0 0;
+    width: 0;
+    height: 0;
+    gap: 0;
   }
 
   .status-actions button,
@@ -574,6 +576,29 @@ button {
     border-left-width: 3px;
     border-right-width: 3px;
     border-top-width: 4px;
+  }
+
+  .status-actions [data-inventory] {
+    display: none;
+  }
+
+  .status-actions [data-log] {
+    position: fixed;
+    right: 62px;
+    bottom: 12px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .status-actions [data-log]::before {
+    content: "🐟";
+    font-size: 20px;
+    line-height: 1;
   }
 
   .hud-top > .buttons {

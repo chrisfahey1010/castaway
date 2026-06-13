@@ -86,19 +86,19 @@ export const startingFishingLine = fishingLines[0];
 export const baitTypes: BaitType[] = [
   {
     id: "questionable-seaweed",
-    name: "Tasty Kelp"
+    name: "Kelp"
   },
   {
     id: "coconut-grub",
-    name: "Coconut Grub"
+    name: "Grub"
   },
   {
     id: "hermit-crab-bits",
-    name: "Crab Meat"
+    name: "Shrimp"
   },
   {
     id: "pork",
-    name: "Salted Pork"
+    name: "Pork"
   }
 ];
 
