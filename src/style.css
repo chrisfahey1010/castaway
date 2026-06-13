@@ -583,6 +583,21 @@ button {
   }
 
   .status-actions [data-log] {
+    display: none;
+  }
+
+  .hud-top > .buttons {
+    display: block;
+    width: 0;
+    height: 0;
+    gap: 0;
+  }
+
+  .hud-top > .buttons [data-inventory] {
+    display: none;
+  }
+
+  .hud-top > .buttons [data-log] {
     position: fixed;
     right: 62px;
     bottom: 12px;
@@ -593,16 +608,13 @@ button {
     height: 44px;
     padding: 0;
     font-size: 0;
+    pointer-events: auto;
   }
 
-  .status-actions [data-log]::before {
+  .hud-top > .buttons [data-log]::before {
     content: "🐟";
     font-size: 20px;
     line-height: 1;
-  }
-
-  .hud-top > .buttons {
-    display: none;
   }
 
   .line-menu {
