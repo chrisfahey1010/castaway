@@ -128,6 +128,7 @@ body {
 .line-option {
   width: 100%;
   padding: 7px 10px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.14);
   color: #f7fbff;
   border: 1px solid rgba(184, 239, 255, 0.2);
@@ -191,6 +192,7 @@ button {
   align-items: center;
   gap: 7px;
   padding: 8px 12px;
+  border-radius: 18px;
   font-size: 12px;
   white-space: nowrap;
 }
@@ -542,34 +544,28 @@ button {
   }
 
   .status-controls {
-    flex-wrap: wrap;
-    gap: 5px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
     margin-top: 8px;
   }
 
   .status-controls > .line-selector {
-    flex: 1 1 0;
     min-width: 0;
   }
 
   .status-actions {
-    display: block;
-    flex: 0 0 0;
-    width: 0;
-    height: 0;
-    gap: 0;
+    display: none;
   }
 
-  .status-actions button,
   .line-select-button {
-    padding: 8px clamp(6px, 2vw, 10px);
-    font-size: clamp(10px, 2.9vw, 12px);
+    padding: 8px 10px;
+    border-radius: 14px;
+    font-size: 12px;
     gap: 5px;
     width: 100%;
     min-width: 0;
     justify-content: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .line-select-button::before {
