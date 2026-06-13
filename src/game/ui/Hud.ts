@@ -34,6 +34,7 @@ export interface HudState {
 
 export class Hud {
   readonly toasts: Toasts;
+  private readonly root: HTMLElement;
   private readonly zoneEl: HTMLElement;
   private readonly promptEl: HTMLElement;
   private readonly rodOptionsEl: HTMLElement;
@@ -74,6 +75,7 @@ export class Hud {
     onMoveControlsChanged: (controls: RaftControlInput) => void,
     onResetGame: () => void
   ) {
+    this.root = root;
     root.innerHTML = `
       <div class="hud">
         <div class="hud-top">
@@ -126,10 +128,26 @@ export class Hud {
       <div class="help-card panel" data-help-card aria-hidden="true">
         <button type="button" class="drawer-close" data-help-close aria-label="Close instructions">x</button>
         <h2>How to Play</h2>
-        <p>Move the raft with WASD, arrow keys, or the on-screen arrows on mobile.</p>
-        <p>Select line and bait depth before casting. Aim at the water, then hold and release to cast.</p>
-        <p>Tap during a bite, then hold to reel.</p>
-        <p>Steer toward the bobber while reeling to reduce line tension.</p>
+        <h3>Catch Fish</h3>
+        <ul class="help-list">
+          <li>Move the raft with WASD or arrow keys.</li>
+          <li>Choose rod, line, bait, and depth, then aim at water.</li>
+          <li>Hold click, Space, or touch to charge a cast. Release to throw.</li>
+          <li>When BITE appears, click, tap, or press Space to hook the fish.</li>
+        </ul>
+        <h3>Fight Smart</h3>
+        <ul class="help-list">
+          <li>Hold to reel. Let go when tension climbs too high.</li>
+          <li>Steer the raft toward the bobber during a fight to give the line slack.</li>
+          <li>Keep the fish close and tension under control to land it.</li>
+        </ul>
+        <h3>Progress</h3>
+        <ul class="help-list">
+          <li>Catch new species and bigger fish to unlock stronger rods and lines.</li>
+          <li>Catch fish with each bait and depth to unlock more options.</li>
+          <li>Better rods reel faster. Heavier lines handle more tension but reel slower. Each species prefers certain bait and depths.</li>
+          <li>Locked menu items show the exact goal. The Collection shows where each species lives.</li>
+        </ul>
         <div class="help-actions">
           <button type="button" class="reset-game-button" data-reset-game>Reset Game</button>
         </div>
@@ -424,6 +442,16 @@ export class Hud {
   }
 
   private setHelpVisible(isVisible: boolean): void {
+    if (isVisible) {
+      this.setRodMenuOpen(false);
+      this.setLineMenuOpen(false);
+      this.setBaitTypeMenuOpen(false);
+      this.setBaitDepthMenuOpen(false);
+      this.inventoryDrawer.classList.remove("visible");
+      this.logDrawer.classList.remove("visible");
+    }
+
+    this.root.classList.toggle("help-open", isVisible);
     this.helpCard.classList.toggle("visible", isVisible);
     this.helpCard.setAttribute("aria-hidden", String(!isVisible));
   }

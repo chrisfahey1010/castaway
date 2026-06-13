@@ -338,11 +338,31 @@ button {
   font-size: 19px;
 }
 
+.help-card h3 {
+  margin: 12px 0 5px;
+  color: #fff39a;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .help-card p {
   margin: 8px 0 0;
   color: rgba(247, 251, 255, 0.84);
   font-size: 14px;
   line-height: 1.35;
+}
+
+.help-list {
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(247, 251, 255, 0.84);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.help-list li + li {
+  margin-top: 4px;
 }
 
 .help-actions {
@@ -648,6 +668,13 @@ button {
     font-size: 22px;
   }
 
+  #hud-root.help-open .hud,
+  #hud-root.help-open .catch-card,
+  #hud-root.help-open .drawer,
+  #hud-root.help-open .toasts {
+    display: none;
+  }
+
   .drawer,
   .help-card {
     top: 82px;
@@ -664,17 +691,49 @@ button {
   }
 
   .help-card {
-    right: 10px;
-    left: auto;
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    left: max(10px, env(safe-area-inset-left));
+    width: auto;
+    max-height: none;
+    padding: 13px 14px;
+    overflow: auto;
   }
 
   .drawer h2,
   .help-card h2 {
-    font-size: 17px;
+    margin-bottom: 8px;
+    font-size: 18px;
+  }
+
+  .help-card h3 {
+    margin: 9px 0 4px;
+    font-size: 11px;
   }
 
   .help-card p {
     font-size: 13px;
+  }
+
+  .help-list {
+    padding-left: 17px;
+    font-size: 12px;
+    line-height: 1.24;
+  }
+
+  .help-list li + li {
+    margin-top: 3px;
+  }
+
+  .help-actions {
+    margin-top: 11px;
+    padding-top: 10px;
+  }
+
+  .reset-game-button {
+    padding: 9px 12px;
+    font-size: 12px;
   }
 
   .list-item {
