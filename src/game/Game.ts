@@ -179,11 +179,12 @@ export class Game {
       this.state.inventory.add(event.caught);
       const result = this.state.collectionLog.recordCatch(event.caught, event.species);
       this.state.records[event.caught.speciesId] = Math.max(this.state.records[event.caught.speciesId] ?? 0, event.caught.lengthCm);
-      const unlocks = this.state.progression.recordCatch(event.caught.weightG, this.equippedBaitType.id, Object.keys(this.state.collectionLog.entries).length);
+      const unlocks = this.state.progression.recordCatch(event.caught.weightG, this.equippedBaitType.id, this.equippedBaitDepth.id, Object.keys(this.state.collectionLog.entries).length);
       this.hud.showCatch(event.caught, result.isNewRecord);
       for (const unlock of unlocks) {
         const baitSuffix = unlock.kind === "bait" ? " bait" : "";
-        this.hud.toasts.show(`Congratulations! You unlocked ${unlock.name}${baitSuffix}!`);
+        const depthSuffix = unlock.kind === "depth" ? " depth" : "";
+        this.hud.toasts.show(`Congratulations! You unlocked ${unlock.name}${baitSuffix}${depthSuffix}!`);
       }
       this.persistState();
     }
@@ -214,6 +215,10 @@ export class Game {
 
     if (!this.state.progression.isBaitTypeUnlocked(this.equippedBaitType.id)) {
       this.equippedBaitType = startingBaitType;
+    }
+
+    if (!this.state.progression.isBaitDepthUnlocked(this.equippedBaitDepth.id)) {
+      this.equippedBaitDepth = startingBaitDepth;
     }
 
     this.state.player.equippedRodId = this.rod.equipped.id;
@@ -279,6 +284,12 @@ export class Game {
   private selectBaitDepth(baitDepthId: string): void {
     if (this.fishing && this.fishing.state !== "idle") {
       this.hud?.toasts.show("Select bait depth before casting.");
+      return;
+    }
+
+    const lockLabel = this.state.progression.getBaitDepthLockLabel(baitDepthId);
+    if (lockLabel) {
+      this.hud?.toasts.show(lockLabel);
       return;
     }
 

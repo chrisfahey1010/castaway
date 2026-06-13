@@ -230,7 +230,7 @@ export class Hud {
     this.updateRodOptions(state.rods, state.rod, state.progression);
     this.updateLineOptions(state.lines, state.line, state.progression);
     this.updateBaitTypeOptions(state.baitTypes, state.baitType, state.progression);
-    this.updateBaitDepthOptions(state.baitDepths, state.baitDepth);
+    this.updateBaitDepthOptions(state.baitDepths, state.baitDepth, state.progression);
     this.updatePlayerMeter(state);
     const inventoryHtml = `<button type="button" class="drawer-close" data-drawer-close aria-label="Close inventory">x</button><h2>Inventory</h2>${renderInventory(state.inventory)}`;
     if (inventoryHtml !== this.inventoryHtml) {
@@ -341,15 +341,18 @@ export class Hud {
       .join("");
   }
 
-  private updateBaitDepthOptions(depths: BaitDepth[], selectedDepth: BaitDepth): void {
-    const key = `${selectedDepth.id}:${depths.map((depth) => depth.id).join(",")}`;
+  private updateBaitDepthOptions(depths: BaitDepth[], selectedDepth: BaitDepth, progression: ProgressionState): void {
+    const key = `${selectedDepth.id}:${depths.map((depth) => `${depth.id}:${progression.getBaitDepthLockLabel(depth.id) ?? "unlocked"}`).join(",")}`;
     if (key === this.baitDepthOptionsKey) {
       return;
     }
 
     this.baitDepthOptionsKey = key;
     this.baitDepthOptionsEl.innerHTML = depths
-      .map((depth) => `<button type="button" class="line-option${depth.id === selectedDepth.id ? " selected" : ""}" data-bait-depth-id="${depth.id}">${depth.name}</button>`)
+      .map((depth) => {
+        const lockLabel = progression.getBaitDepthLockLabel(depth.id);
+        return `<button type="button" class="line-option${depth.id === selectedDepth.id ? " selected" : ""}${lockLabel ? " locked" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-bait-depth-id="${depth.id}"`}>${lockLabel ?? depth.name}</button>`;
+      })
       .join("");
   }
 

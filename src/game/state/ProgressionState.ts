@@ -1,6 +1,7 @@
-import { baitTypes, fishingLines, rods, type BaitTypeId } from "../data/equipment";
+import { baitDepths, baitTypes, fishingLines, rods, type BaitDepthId, type BaitTypeId } from "../data/equipment";
 
 const UNLOCK_REQUIREMENT = 5;
+const DEPTH_UNLOCK_REQUIREMENT = 10;
 const BAMBOO_ROD_UNIQUE_SPECIES_REQUIREMENT = 6;
 const REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT = 12;
 
@@ -10,10 +11,11 @@ export interface ProgressionSnapshot {
   catchesAtLeast1000G?: number;
   uniqueSpeciesCaught?: number;
   catchesByBait?: Partial<Record<BaitTypeId, number>>;
+  catchesByDepth?: Partial<Record<BaitDepthId, number>>;
 }
 
 export interface ProgressionUnlock {
-  kind: "line" | "bait" | "rod";
+  kind: "line" | "bait" | "rod" | "depth";
   name: string;
 }
 
@@ -21,6 +23,11 @@ const baitUnlockRequirements: Partial<Record<BaitTypeId, BaitTypeId>> = {
   "coconut-grub": "questionable-seaweed",
   "hermit-crab-bits": "coconut-grub",
   pork: "hermit-crab-bits"
+};
+
+const depthUnlockRequirements: Partial<Record<BaitDepthId, BaitDepthId>> = {
+  medium: "shallow",
+  deep: "medium"
 };
 
 export class ProgressionState {
@@ -33,13 +40,19 @@ export class ProgressionState {
     "hermit-crab-bits": 0,
     pork: 0
   };
+  catchesByDepth: Record<BaitDepthId, number> = {
+    shallow: 0,
+    medium: 0,
+    deep: 0
+  };
 
   toSnapshot(): ProgressionSnapshot {
     return {
       catchesAtLeast300G: this.catchesAtLeast300G,
       catchesAtLeast1000G: this.catchesAtLeast1000G,
       uniqueSpeciesCaught: this.uniqueSpeciesCaught,
-      catchesByBait: { ...this.catchesByBait }
+      catchesByBait: { ...this.catchesByBait },
+      catchesByDepth: { ...this.catchesByDepth }
     };
   }
 
@@ -50,9 +63,12 @@ export class ProgressionState {
     for (const baitType of baitTypes) {
       this.catchesByBait[baitType.id] = this.cleanCount(snapshot?.catchesByBait?.[baitType.id]);
     }
+    for (const depth of baitDepths) {
+      this.catchesByDepth[depth.id] = this.cleanCount(snapshot?.catchesByDepth?.[depth.id]);
+    }
   }
 
-  recordCatch(weightG: number, baitTypeId: BaitTypeId, uniqueSpeciesCaught: number): ProgressionUnlock[] {
+  recordCatch(weightG: number, baitTypeId: BaitTypeId, baitDepthId: BaitDepthId, uniqueSpeciesCaught: number): ProgressionUnlock[] {
     const unlockedBefore = this.unlockedNamesSet();
 
     if (weightG >= 300) {
@@ -64,6 +80,7 @@ export class ProgressionState {
     }
 
     this.catchesByBait[baitTypeId] += 1;
+    this.catchesByDepth[baitDepthId] += 1;
     this.setUniqueSpeciesCaught(uniqueSpeciesCaught);
 
     return this.unlockedNames().filter((unlock) => !unlockedBefore.has(this.unlockKey(unlock)));
@@ -83,6 +100,10 @@ export class ProgressionState {
 
   isBaitTypeUnlocked(baitTypeId: string): boolean {
     return this.getBaitTypeLockLabel(baitTypeId) === null;
+  }
+
+  isBaitDepthUnlocked(baitDepthId: string): boolean {
+    return this.getBaitDepthLockLabel(baitDepthId) === null;
   }
 
   getLineLockLabel(lineId: string): string | null {
@@ -124,6 +145,21 @@ export class ProgressionState {
     return `Catch fish using ${requiredBaitType?.name ?? "the previous bait"} (${count}/${UNLOCK_REQUIREMENT})`;
   }
 
+  getBaitDepthLockLabel(baitDepthId: string): string | null {
+    const requiredDepthId = depthUnlockRequirements[baitDepthId as BaitDepthId];
+    if (!requiredDepthId) {
+      return null;
+    }
+
+    const count = this.catchesByDepth[requiredDepthId];
+    if (count >= DEPTH_UNLOCK_REQUIREMENT) {
+      return null;
+    }
+
+    const requiredDepth = baitDepths.find((depth) => depth.id === requiredDepthId);
+    return `Catch fish at ${requiredDepth?.name ?? "the previous"} depth (${count}/${DEPTH_UNLOCK_REQUIREMENT})`;
+  }
+
   private unlockedNames(): ProgressionUnlock[] {
     const lineUnlocks = fishingLines
       .filter((line) => line.id !== "light-line" && this.isLineUnlocked(line.id))
@@ -131,11 +167,14 @@ export class ProgressionState {
     const baitUnlocks = baitTypes
       .filter((baitType) => baitType.id !== "questionable-seaweed" && this.isBaitTypeUnlocked(baitType.id))
       .map((baitType) => ({ kind: "bait" as const, name: baitType.name }));
+    const depthUnlocks = baitDepths
+      .filter((depth) => depth.id !== "shallow" && this.isBaitDepthUnlocked(depth.id))
+      .map((depth) => ({ kind: "depth" as const, name: depth.name }));
     const rodUnlocks = rods
       .filter((rod) => rod.id !== "driftwood-rod" && this.isRodUnlocked(rod.id))
       .map((rod) => ({ kind: "rod" as const, name: rod.name }));
 
-    return [...lineUnlocks, ...baitUnlocks, ...rodUnlocks];
+    return [...lineUnlocks, ...baitUnlocks, ...depthUnlocks, ...rodUnlocks];
   }
 
   private unlockKey(unlock: ProgressionUnlock): string {
