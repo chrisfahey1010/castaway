@@ -1,7 +1,7 @@
 import { baitDepths, baitTypes, fishingLines, rods, type BaitDepthId, type BaitTypeId } from "../data/equipment";
 
 const UNLOCK_REQUIREMENT = 5;
-const DEPTH_UNLOCK_REQUIREMENT = 10;
+const DEPTH_UNLOCK_REQUIREMENT = 8;
 const BAMBOO_ROD_UNIQUE_SPECIES_REQUIREMENT = 6;
 const REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT = 12;
 const UNKNOWN_LOCK_LABEL = "🔒";
