@@ -319,14 +319,24 @@ button {
 
 .help-card {
   position: absolute;
-  top: 76px;
-  left: 18px;
+  right: 18px;
+  bottom: 78px;
   width: min(360px, calc(100vw - 36px));
+  max-height: calc(100vh - 114px);
   box-sizing: border-box;
+  z-index: 5;
   display: none;
   padding: 16px;
   overflow: auto;
   pointer-events: auto;
+}
+
+.help-card.start-mode {
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .help-card.visible {
@@ -371,10 +381,18 @@ button {
   border-top: 1px solid rgba(184, 239, 255, 0.18);
 }
 
-.reset-game-button {
+.help-action-button {
   width: 100%;
+}
+
+.reset-game-button {
   background: rgba(255, 116, 104, 0.92);
   color: #fff7f4;
+}
+
+.start-game-button {
+  background: rgba(104, 224, 138, 0.94);
+  color: #082d1d;
 }
 
 .catch-card.visible {
@@ -413,6 +431,7 @@ button {
   position: absolute;
   right: 18px;
   bottom: 78px;
+  z-index: 4;
   display: grid;
   gap: 8px;
 }
@@ -697,6 +716,7 @@ button {
     left: max(10px, env(safe-area-inset-left));
     width: auto;
     max-height: none;
+    transform: none;
     padding: 13px 14px;
     overflow: auto;
   }
@@ -731,7 +751,7 @@ button {
     padding-top: 10px;
   }
 
-  .reset-game-button {
+  .help-action-button {
     padding: 9px 12px;
     font-size: 12px;
   }

@@ -1,23 +1,31 @@
 import type { GameState, SaveGame } from "./GameState";
 
-const LEGACY_SAVE_KEYS = ["castaway.save.v1"];
-const SAVE_KEY = "castaway.save.v2";
+const LEGACY_SAVE_KEYS = ["castaway.save.v1", "castaway.save.v2"];
+const SAVE_KEY = "castaway.save.v3";
 
 export class SaveManager {
-  load(state: GameState): void {
+  load(state: GameState): boolean {
     for (const key of LEGACY_SAVE_KEYS) {
       window.localStorage.removeItem(key);
     }
 
     const raw = window.localStorage.getItem(SAVE_KEY);
     if (!raw) {
-      return;
+      return false;
     }
 
     try {
-      state.applySave(JSON.parse(raw) as SaveGame);
+      const save = JSON.parse(raw) as SaveGame;
+      if (save.version !== state.version) {
+        window.localStorage.removeItem(SAVE_KEY);
+        return false;
+      }
+
+      state.applySave(save);
+      return true;
     } catch {
       window.localStorage.removeItem(SAVE_KEY);
+      return false;
     }
   }
 

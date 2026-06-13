@@ -59,7 +59,7 @@ export class Game {
   }
 
   async init(): Promise<void> {
-    this.saveManager.load(this.state);
+    const hasSave = this.saveManager.load(this.state);
     this.sceneBundle = createScene(this.engine);
     this.assetLoader = new AssetLoader(this.sceneBundle.scene);
     const assets = await this.assetLoader.load();
@@ -97,7 +97,9 @@ export class Game {
       (baitTypeId) => this.selectBaitType(baitTypeId),
       (baitDepthId) => this.selectBaitDepth(baitDepthId),
       (controls) => this.input.setTouchControls(controls),
-      () => this.resetGame()
+      () => this.resetGame(),
+      () => this.startNewGame(),
+      !hasSave
     );
     this.input.attach();
     window.addEventListener("resize", this.resize);
@@ -200,8 +202,12 @@ export class Game {
 
   private resetGame(): void {
     this.isResetting = true;
-    this.saveManager.clear();
+    this.saveManager.save(new GameState());
     window.location.reload();
+  }
+
+  private startNewGame(): void {
+    this.persistState();
   }
 
   private ensureUnlockedEquipment(): void {

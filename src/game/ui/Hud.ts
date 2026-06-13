@@ -35,6 +35,7 @@ export interface HudState {
 export class Hud {
   readonly toasts: Toasts;
   private readonly root: HTMLElement;
+  private readonly onStartGame: () => void;
   private readonly zoneEl: HTMLElement;
   private readonly promptEl: HTMLElement;
   private readonly rodOptionsEl: HTMLElement;
@@ -50,6 +51,7 @@ export class Hud {
   private readonly baitDepthSelectorEl: HTMLElement;
   private readonly baitDepthToggleButton: HTMLButtonElement;
   private readonly helpCard: HTMLElement;
+  private readonly helpActionButton: HTMLButtonElement;
   private readonly playerMeterEl: HTMLElement;
   private readonly playerMeterFill: HTMLElement;
   private readonly catchCard: HTMLElement;
@@ -65,6 +67,7 @@ export class Hud {
   private lineOptionsKey = "";
   private baitTypeOptionsKey = "";
   private baitDepthOptionsKey = "";
+  private helpMode: "start" | "reset" = "reset";
 
   constructor(
     root: HTMLElement,
@@ -73,9 +76,12 @@ export class Hud {
     onBaitTypeSelected: (baitTypeId: string) => void,
     onBaitDepthSelected: (baitDepthId: string) => void,
     onMoveControlsChanged: (controls: RaftControlInput) => void,
-    onResetGame: () => void
+    onResetGame: () => void,
+    onStartGame: () => void,
+    showInitialHelp: boolean
   ) {
     this.root = root;
+    this.onStartGame = onStartGame;
     root.innerHTML = `
       <div class="hud">
         <div class="hud-top">
@@ -149,7 +155,7 @@ export class Hud {
           <li>Locked menu items show the exact goal. The Collection shows where each species lives.</li>
         </ul>
         <div class="help-actions">
-          <button type="button" class="reset-game-button" data-reset-game>Reset Game</button>
+          <button type="button" class="help-action-button reset-game-button" data-help-action>Reset Game</button>
         </div>
       </div>
       <div class="drawer" data-inventory-drawer></div>
@@ -174,6 +180,7 @@ export class Hud {
     this.playerMeterFill = this.must(root, "[data-player-meter-fill]");
     this.catchCard = this.must(root, "[data-catch-card]");
     this.helpCard = this.must(root, "[data-help-card]");
+    this.helpActionButton = this.must(root, "[data-help-action]") as HTMLButtonElement;
     this.inventoryDrawer = this.must(root, "[data-inventory-drawer]");
     this.logDrawer = this.must(root, "[data-log-drawer]");
     this.toasts = new Toasts(root);
@@ -184,9 +191,15 @@ export class Hud {
     root.querySelectorAll("[data-inventory]").forEach((button) => button.addEventListener("click", () => this.toggleDrawer(this.inventoryDrawer, this.logDrawer)));
     root.querySelectorAll("[data-log]").forEach((button) => button.addEventListener("click", () => this.toggleDrawer(this.logDrawer, this.inventoryDrawer)));
     this.must(root, "[data-help-toggle]").addEventListener("click", () => this.toggleHelp());
-    this.must(root, "[data-help-close]").addEventListener("click", () => this.setHelpVisible(false));
-    this.must(root, "[data-reset-game]").addEventListener("click", () => {
+    this.must(root, "[data-help-close]").addEventListener("click", () => this.closeHelp());
+    this.helpActionButton.addEventListener("click", () => {
+      if (this.helpMode === "start") {
+        this.closeHelp();
+        return;
+      }
+
       if (window.confirm("Reset all progress and restart the game?")) {
+        this.setHelpVisible(false);
         onResetGame();
       }
     });
@@ -229,6 +242,10 @@ export class Hud {
       }
     });
     this.setupMobileControls(this.must(root, "[data-mobile-controls]"), onMoveControlsChanged);
+    if (showInitialHelp) {
+      this.setHelpMode("start");
+      this.setHelpVisible(true);
+    }
 
     window.setTimeout(() => {
       this.idlePromptVisible = false;
@@ -438,7 +455,21 @@ export class Hud {
   }
 
   private toggleHelp(): void {
-    this.setHelpVisible(!this.helpCard.classList.contains("visible"));
+    if (this.helpCard.classList.contains("visible")) {
+      this.closeHelp();
+      return;
+    }
+
+    this.setHelpVisible(true);
+  }
+
+  private closeHelp(): void {
+    if (this.helpMode === "start") {
+      this.onStartGame();
+      this.setHelpMode("reset");
+    }
+
+    this.setHelpVisible(false);
   }
 
   private setHelpVisible(isVisible: boolean): void {
@@ -454,6 +485,14 @@ export class Hud {
     this.root.classList.toggle("help-open", isVisible);
     this.helpCard.classList.toggle("visible", isVisible);
     this.helpCard.setAttribute("aria-hidden", String(!isVisible));
+  }
+
+  private setHelpMode(mode: "start" | "reset"): void {
+    this.helpMode = mode;
+    this.helpActionButton.textContent = mode === "start" ? "Start Game" : "Reset Game";
+    this.helpCard.classList.toggle("start-mode", mode === "start");
+    this.helpActionButton.classList.toggle("start-game-button", mode === "start");
+    this.helpActionButton.classList.toggle("reset-game-button", mode === "reset");
   }
 
   private setupMobileControls(controlRoot: HTMLElement, onMoveControlsChanged: (controls: RaftControlInput) => void): void {
