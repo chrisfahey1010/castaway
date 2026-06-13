@@ -4,11 +4,12 @@ const UNLOCK_REQUIREMENT = 5;
 const DEPTH_UNLOCK_REQUIREMENT = 10;
 const BAMBOO_ROD_UNIQUE_SPECIES_REQUIREMENT = 6;
 const REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT = 12;
+const UNKNOWN_LOCK_LABEL = "🔒";
 
 export interface ProgressionSnapshot {
   catchesAtLeast300G?: number;
   catchesAtLeast500G?: number;
-  catchesAtLeast1000G?: number;
+  catchesAtLeast3000G?: number;
   uniqueSpeciesCaught?: number;
   catchesByBait?: Partial<Record<BaitTypeId, number>>;
   catchesByDepth?: Partial<Record<BaitDepthId, number>>;
@@ -32,7 +33,7 @@ const depthUnlockRequirements: Partial<Record<BaitDepthId, BaitDepthId>> = {
 
 export class ProgressionState {
   catchesAtLeast300G = 0;
-  catchesAtLeast1000G = 0;
+  catchesAtLeast3000G = 0;
   uniqueSpeciesCaught = 0;
   catchesByBait: Record<BaitTypeId, number> = {
     "questionable-seaweed": 0,
@@ -49,7 +50,7 @@ export class ProgressionState {
   toSnapshot(): ProgressionSnapshot {
     return {
       catchesAtLeast300G: this.catchesAtLeast300G,
-      catchesAtLeast1000G: this.catchesAtLeast1000G,
+      catchesAtLeast3000G: this.catchesAtLeast3000G,
       uniqueSpeciesCaught: this.uniqueSpeciesCaught,
       catchesByBait: { ...this.catchesByBait },
       catchesByDepth: { ...this.catchesByDepth }
@@ -58,7 +59,7 @@ export class ProgressionState {
 
   applySnapshot(snapshot?: ProgressionSnapshot): void {
     this.catchesAtLeast300G = this.cleanCount(snapshot?.catchesAtLeast300G ?? snapshot?.catchesAtLeast500G);
-    this.catchesAtLeast1000G = this.cleanCount(snapshot?.catchesAtLeast1000G);
+    this.catchesAtLeast3000G = this.cleanCount(snapshot?.catchesAtLeast3000G);
     this.uniqueSpeciesCaught = this.cleanCount(snapshot?.uniqueSpeciesCaught);
     for (const baitType of baitTypes) {
       this.catchesByBait[baitType.id] = this.cleanCount(snapshot?.catchesByBait?.[baitType.id]);
@@ -75,8 +76,8 @@ export class ProgressionState {
       this.catchesAtLeast300G += 1;
     }
 
-    if (weightG >= 1000) {
-      this.catchesAtLeast1000G += 1;
+    if (weightG >= 3000) {
+      this.catchesAtLeast3000G += 1;
     }
 
     this.catchesByBait[baitTypeId] += 1;
@@ -111,8 +112,14 @@ export class ProgressionState {
       return `Catch fish weighing 300g or more (${this.catchesAtLeast300G}/${UNLOCK_REQUIREMENT})`;
     }
 
-    if (lineId === "heavy-line" && this.catchesAtLeast1000G < UNLOCK_REQUIREMENT) {
-      return `Catch fish weighing 1.0 kg or more (${this.catchesAtLeast1000G}/${UNLOCK_REQUIREMENT})`;
+    if (lineId === "heavy-line") {
+      if (!this.isLineUnlocked("medium-line")) {
+        return UNKNOWN_LOCK_LABEL;
+      }
+
+      if (this.catchesAtLeast3000G < UNLOCK_REQUIREMENT) {
+        return `Catch fish weighing 3.0 kg or more (${this.catchesAtLeast3000G}/${UNLOCK_REQUIREMENT})`;
+      }
     }
 
     return null;
@@ -123,8 +130,14 @@ export class ProgressionState {
       return `Catch ${BAMBOO_ROD_UNIQUE_SPECIES_REQUIREMENT} unique fish species (${this.uniqueSpeciesCaught}/${BAMBOO_ROD_UNIQUE_SPECIES_REQUIREMENT})`;
     }
 
-    if (rodId === "reinforced-rod" && this.uniqueSpeciesCaught < REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT) {
-      return `Catch ${REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT} unique fish species (${this.uniqueSpeciesCaught}/${REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT})`;
+    if (rodId === "reinforced-rod") {
+      if (!this.isRodUnlocked("bamboo-rod")) {
+        return UNKNOWN_LOCK_LABEL;
+      }
+
+      if (this.uniqueSpeciesCaught < REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT) {
+        return `Catch ${REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT} unique fish species (${this.uniqueSpeciesCaught}/${REINFORCED_ROD_UNIQUE_SPECIES_REQUIREMENT})`;
+      }
     }
 
     return null;
@@ -134,6 +147,10 @@ export class ProgressionState {
     const requiredBaitTypeId = baitUnlockRequirements[baitTypeId as BaitTypeId];
     if (!requiredBaitTypeId) {
       return null;
+    }
+
+    if (!this.isBaitTypeUnlocked(requiredBaitTypeId)) {
+      return UNKNOWN_LOCK_LABEL;
     }
 
     const count = this.catchesByBait[requiredBaitTypeId];
@@ -149,6 +166,10 @@ export class ProgressionState {
     const requiredDepthId = depthUnlockRequirements[baitDepthId as BaitDepthId];
     if (!requiredDepthId) {
       return null;
+    }
+
+    if (!this.isBaitDepthUnlocked(requiredDepthId)) {
+      return UNKNOWN_LOCK_LABEL;
     }
 
     const count = this.catchesByDepth[requiredDepthId];

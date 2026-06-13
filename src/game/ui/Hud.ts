@@ -321,7 +321,7 @@ export class Hud {
     this.lineOptionsEl.innerHTML = lines
       .map((line) => {
         const lockLabel = progression.getLineLockLabel(line.id);
-        return `<button type="button" class="line-option${line.id === selectedLine.id ? " selected" : ""}${lockLabel ? " locked" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-line-id="${line.id}"`}>${lockLabel ?? line.name}</button>`;
+        return `<button type="button" class="line-option${line.id === selectedLine.id ? " selected" : ""}${lockLabel ? " locked" : ""}${lockLabel === "🔒" ? " unknown-lock" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-line-id="${line.id}"`}>${lockLabel ?? line.name}</button>`;
       })
       .join("");
   }
@@ -336,7 +336,7 @@ export class Hud {
     this.rodOptionsEl.innerHTML = rods
       .map((rod) => {
         const lockLabel = progression.getRodLockLabel(rod.id);
-        return `<button type="button" class="line-option${rod.id === selectedRod.id ? " selected" : ""}${lockLabel ? " locked" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-rod-id="${rod.id}"`}>${lockLabel ?? rod.name}</button>`;
+        return `<button type="button" class="line-option${rod.id === selectedRod.id ? " selected" : ""}${lockLabel ? " locked" : ""}${lockLabel === "🔒" ? " unknown-lock" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-rod-id="${rod.id}"`}>${lockLabel ?? rod.name}</button>`;
       })
       .join("");
   }
@@ -351,7 +351,7 @@ export class Hud {
     this.baitDepthOptionsEl.innerHTML = depths
       .map((depth) => {
         const lockLabel = progression.getBaitDepthLockLabel(depth.id);
-        return `<button type="button" class="line-option${depth.id === selectedDepth.id ? " selected" : ""}${lockLabel ? " locked" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-bait-depth-id="${depth.id}"`}>${lockLabel ?? depth.name}</button>`;
+        return `<button type="button" class="line-option${depth.id === selectedDepth.id ? " selected" : ""}${lockLabel ? " locked" : ""}${lockLabel === "🔒" ? " unknown-lock" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-bait-depth-id="${depth.id}"`}>${lockLabel ?? depth.name}</button>`;
       })
       .join("");
   }
@@ -366,7 +366,7 @@ export class Hud {
     this.baitTypeOptionsEl.innerHTML = baitTypes
       .map((baitType) => {
         const lockLabel = progression.getBaitTypeLockLabel(baitType.id);
-        return `<button type="button" class="line-option${baitType.id === selectedBaitType.id ? " selected" : ""}${lockLabel ? " locked" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-bait-type-id="${baitType.id}"`}>${lockLabel ?? baitType.name}</button>`;
+        return `<button type="button" class="line-option${baitType.id === selectedBaitType.id ? " selected" : ""}${lockLabel ? " locked" : ""}${lockLabel === "🔒" ? " unknown-lock" : ""}"${lockLabel ? " disabled aria-disabled=\"true\"" : ` data-bait-type-id="${baitType.id}"`}>${lockLabel ?? baitType.name}</button>`;
       })
       .join("");
   }

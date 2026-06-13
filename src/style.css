@@ -150,6 +150,10 @@ body {
   white-space: normal;
 }
 
+.line-option.unknown-lock {
+  font-style: normal;
+}
+
 .buttons {
   display: flex;
   gap: 8px;
