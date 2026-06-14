@@ -18,7 +18,7 @@ import { BiteSystem } from "./BiteSystem";
 import { CastSystem } from "./CastSystem";
 import { CatchResolver } from "./CatchResolver";
 import { FishFightSystem, type FishFightState } from "./FishFightSystem";
-import { FishSpawner } from "./FishSpawner";
+import { FishSpawner, type FishSpawnChance } from "./FishSpawner";
 
 export type FishingState = "idle" | "chargingCast" | "casting" | "waitingForBite" | "biteWindow" | "reeling" | "caught" | "escaped";
 
@@ -29,6 +29,15 @@ export interface FishingSnapshot {
   reelProgress: number;
   hookWindow: number;
   hookWindowRemaining: number;
+  hookedFish: HookedFishSnapshot | null;
+  possibleFish: FishSpawnChance[];
+}
+
+export interface HookedFishSnapshot {
+  species: FishSpecies;
+  catch: CaughtFish;
+  fight: FishFightStats;
+  zoneName: string;
 }
 
 export interface CatchEvent {
@@ -45,7 +54,9 @@ export class FishingSystem {
     tension: 0,
     reelProgress: 0,
     hookWindow: 0,
-    hookWindowRemaining: 0
+    hookWindowRemaining: 0,
+    hookedFish: null,
+    possibleFish: []
   };
 
   private readonly castSystem = new CastSystem();
@@ -67,6 +78,7 @@ export class FishingSystem {
   private activeFish: FishSpecies | null = null;
   private activeCatch: CaughtFish | null = null;
   private activeFight: FishFightStats | null = null;
+  private possibleFish: FishSpawnChance[] = [];
   private fightState: FishFightState | null = null;
   private fishSwimDirection = new Vector3(0, 0, 1);
   private resetTimer = 0;
@@ -174,10 +186,12 @@ export class FishingSystem {
 
       const activeFish = this.fishSpawner.pickFish(this.activeZone, baitDepth, baitType);
       if (!activeFish) {
+        this.possibleFish = [];
         this.failCast("No fish are biting with that bait and depth combo.");
         return;
       }
 
+      this.possibleFish = this.fishSpawner.getFishChances(this.activeZone, baitDepth, baitType);
       this.activeFish = activeFish;
       this.activeCatch = this.catchResolver.resolve(activeFish, this.activeZone);
       this.activeFight = this.fightSystem.createFightStats(activeFish, this.activeCatch.weightG);
@@ -285,6 +299,7 @@ export class FishingSystem {
       this.activeCatch = null;
       this.activeFight = null;
       this.activeZone = null;
+      this.possibleFish = [];
       this.fightState = null;
       this.chargeSeconds = 0;
       this.bobber.hide();
@@ -302,6 +317,7 @@ export class FishingSystem {
       this.activeCatch = null;
       this.activeFight = null;
       this.activeZone = null;
+      this.possibleFish = [];
       this.fightState = null;
       this.audio.stop("reel");
       this.bobber.hide();
@@ -440,13 +456,26 @@ export class FishingSystem {
   }
 
   private updateSnapshot(): void {
+    const isHooked = this.state === "reeling" || this.state === "caught";
+    const possibleFish = this.state === "waitingForBite" || this.state === "biteWindow" ? this.possibleFish : [];
+    const hookedFish = isHooked && this.activeFish && this.activeCatch && this.activeFight && this.activeZone
+      ? {
+          species: this.activeFish,
+          catch: this.activeCatch,
+          fight: this.activeFight,
+          zoneName: this.activeZone.name
+        }
+      : null;
+
     this.snapshot = {
       state: this.state,
       castPower: this.state === "chargingCast" ? Math.min(1, this.chargeSeconds / GAME_CONFIG.fishing.maxChargeSeconds) : 0,
       tension: this.fightState?.tension ?? 0,
       reelProgress: this.fightState?.progress ?? 0,
       hookWindow: this.hookWindow,
-      hookWindowRemaining: this.hookWindowRemaining
+      hookWindowRemaining: this.hookWindowRemaining,
+      hookedFish,
+      possibleFish
     };
   }
 }

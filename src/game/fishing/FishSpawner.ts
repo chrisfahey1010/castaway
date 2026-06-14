@@ -6,9 +6,38 @@ import type { FishSpecies } from "./FishSpecies";
 
 const SECONDARY_PREFERENCE_MULTIPLIER = 0.25;
 
+export interface FishSpawnChance {
+  species: FishSpecies;
+  weight: number;
+  chance: number;
+}
+
 export class FishSpawner {
   pickFish(zone: FishingZone, baitDepth: BaitDepth, baitType: BaitType): FishSpecies | null {
-    const eligible = zone.fishTable
+    const eligible = this.getEligibleFish(zone, baitDepth, baitType);
+
+    if (eligible.length === 0) {
+      return null;
+    }
+
+    return pickWeighted(eligible.map((entry) => ({ item: entry.species, weight: entry.weight })));
+  }
+
+  getFishChances(zone: FishingZone, baitDepth: BaitDepth, baitType: BaitType): FishSpawnChance[] {
+    const eligible = this.getEligibleFish(zone, baitDepth, baitType);
+    const totalWeight = eligible.reduce((total, entry) => total + entry.weight, 0);
+    if (totalWeight <= 0) {
+      return [];
+    }
+
+    return eligible.map((entry) => ({
+      ...entry,
+      chance: entry.weight / totalWeight
+    }));
+  }
+
+  private getEligibleFish(zone: FishingZone, baitDepth: BaitDepth, baitType: BaitType): Array<{ species: FishSpecies; weight: number }> {
+    return zone.fishTable
       .map((entry) => {
         const species = getFishSpecies(entry.fishId);
         if (!species) {
@@ -23,17 +52,11 @@ export class FishSpawner {
         }
 
         return {
-          item: species,
+          species,
           weight: entry.weight * species.biteChanceModifier * biomeMultiplier * depthMultiplier * baitMultiplier
         };
       })
-      .filter((entry): entry is { item: FishSpecies; weight: number } => entry !== null);
-
-    if (eligible.length === 0) {
-      return null;
-    }
-
-    return pickWeighted(eligible);
+      .filter((entry): entry is { species: FishSpecies; weight: number } => entry !== null);
   }
 
   private preferenceMultiplier<TPreference extends string>(value: TPreference, preferred: TPreference, secondary: TPreference[]): number {

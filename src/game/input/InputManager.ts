@@ -18,6 +18,8 @@ export class InputManager {
   private spaceWasDown = false;
   spacePressed = false;
   spaceReleased = false;
+  private slashWasDown = false;
+  slashPressed = false;
   private touchControls: RaftControlInput = { throttle: 0, turn: 0 };
 
   constructor(canvas: HTMLCanvasElement) {
@@ -43,6 +45,10 @@ export class InputManager {
     this.spacePressed = spaceDown && !this.spaceWasDown;
     this.spaceReleased = !spaceDown && this.spaceWasDown;
     this.spaceWasDown = spaceDown;
+
+    const slashDown = this.keyboard.isDown("Slash");
+    this.slashPressed = slashDown && !this.slashWasDown;
+    this.slashWasDown = slashDown;
   }
 
   get movementAxis(): { x: number; z: number } {
@@ -84,6 +90,7 @@ export class InputManager {
     this.pointer.endFrame();
     this.spacePressed = false;
     this.spaceReleased = false;
+    this.slashPressed = false;
   }
 }
 

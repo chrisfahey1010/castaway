@@ -30,6 +30,7 @@ export interface HudState {
   progression: ProgressionState;
   playerPosition: Vector3;
   camera: Camera;
+  developerViewVisible: boolean;
 }
 
 export class Hud {
@@ -53,8 +54,10 @@ export class Hud {
   private readonly helpCard: HTMLElement;
   private readonly helpActionButton: HTMLButtonElement;
   private readonly playerMeterEl: HTMLElement;
+  private readonly playerMeterValue: HTMLElement;
   private readonly playerMeterFill: HTMLElement;
   private readonly catchCard: HTMLElement;
+  private readonly developerCard: HTMLElement;
   private readonly inventoryDrawer: HTMLElement;
   private readonly logDrawer: HTMLElement;
   private readonly activeMovePointers = new Map<number, string>();
@@ -126,11 +129,13 @@ export class Hud {
           <button type="button" class="move-button move-right" data-move="right" aria-label="Turn right">→</button>
         </div>
         <div class="player-meter" data-player-meter aria-hidden="true">
+          <div class="player-meter-value" data-player-meter-value></div>
           <div class="meter"><div class="meter-fill" data-player-meter-fill></div></div>
         </div>
         <button type="button" class="icon-button help-toggle-button" data-help-toggle aria-label="Show instructions">?</button>
       </div>
       <div class="catch-card" data-catch-card></div>
+      <div class="developer-card panel" data-developer-card aria-hidden="true"></div>
       <div class="help-card panel" data-help-card aria-hidden="true">
         <button type="button" class="drawer-close" data-help-close aria-label="Close instructions">x</button>
         <h2>How to Play</h2>
@@ -177,8 +182,10 @@ export class Hud {
     this.baitDepthSelectorEl = this.must(root, "[data-bait-depth-selector]");
     this.baitDepthToggleButton = this.must(root, "[data-bait-depth-toggle]") as HTMLButtonElement;
     this.playerMeterEl = this.must(root, "[data-player-meter]");
+    this.playerMeterValue = this.must(root, "[data-player-meter-value]");
     this.playerMeterFill = this.must(root, "[data-player-meter-fill]");
     this.catchCard = this.must(root, "[data-catch-card]");
+    this.developerCard = this.must(root, "[data-developer-card]");
     this.helpCard = this.must(root, "[data-help-card]");
     this.helpActionButton = this.must(root, "[data-help-action]") as HTMLButtonElement;
     this.inventoryDrawer = this.must(root, "[data-inventory-drawer]");
@@ -267,6 +274,7 @@ export class Hud {
     this.updateBaitTypeOptions(state.baitTypes, state.baitType, state.progression);
     this.updateBaitDepthOptions(state.baitDepths, state.baitDepth, state.progression);
     this.updatePlayerMeter(state);
+    this.updateDeveloperCard(state);
     const inventoryHtml = `<button type="button" class="drawer-close" data-drawer-close aria-label="Close inventory">x</button><h2>Inventory</h2>${renderInventory(state.inventory)}`;
     if (inventoryHtml !== this.inventoryHtml) {
       this.inventoryHtml = inventoryHtml;
@@ -314,11 +322,96 @@ export class Hud {
     const value = isCasting
       ? state.fishing.castPower
       : state.fishing.tension / (state.rod.tensionLimit * state.line.tensionLimitMultiplier);
+    const maxTension = state.rod.tensionLimit * state.line.tensionLimitMultiplier;
+    this.playerMeterValue.textContent = `${state.fishing.tension.toFixed(2)} / ${maxTension.toFixed(2)}`;
+    this.playerMeterValue.classList.toggle("visible", state.developerViewVisible && isReeling);
     this.playerMeterFill.classList.toggle("tension", isReeling);
     this.setMeter(this.playerMeterFill, value, true);
     this.positionPlayerMeter(state.playerPosition, state.camera);
     this.playerMeterEl.classList.add("visible");
     this.playerMeterEl.setAttribute("aria-hidden", "false");
+  }
+
+  private updateDeveloperCard(state: HudState): void {
+    this.developerCard.classList.toggle("visible", state.developerViewVisible);
+    this.developerCard.setAttribute("aria-hidden", String(!state.developerViewVisible));
+    if (!state.developerViewVisible) {
+      return;
+    }
+
+    const hookedFish = state.fishing.hookedFish;
+    if (!hookedFish) {
+      const possibleFish = state.fishing.possibleFish;
+      if (possibleFish.length > 0) {
+        this.developerCard.innerHTML = `
+          <div class="developer-kicker">Developer View</div>
+          <div class="developer-section-title">Possible Hook Table</div>
+          <div class="developer-possible-grid">
+            ${possibleFish.map((entry) => `
+              <div class="developer-possible-fish" style="--fish-color: ${entry.species.color}" title="${entry.species.name}">
+                <img src="${entry.species.spriteUrl}" alt="${entry.species.name}" draggable="false">
+                <strong>${this.formatChance(entry.chance)}</strong>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        return;
+      }
+
+      this.developerCard.innerHTML = `
+        <div class="developer-kicker">Developer View</div>
+        <div class="developer-empty">
+          <strong>No fish hooked</strong>
+          <span>Hook a fish to inspect its generated size and fight stats.</span>
+        </div>
+      `;
+      return;
+    }
+
+    const { species, catch: caught, fight, zoneName } = hookedFish;
+    this.developerCard.innerHTML = `
+      <div class="developer-kicker">Developer View</div>
+      <div class="developer-fish-card" style="--fish-color: ${species.color}">
+        <img class="developer-fish-sprite" src="${caught.spriteUrl ?? species.spriteUrl}" alt="${caught.name}" draggable="false">
+        <div class="developer-fish-summary">
+          <div class="developer-label">Hooked Fish</div>
+          <div class="developer-fish-name">${caught.name}</div>
+          <div class="developer-fish-meta">${species.id} · ${caught.rarity} · ${zoneName}</div>
+        </div>
+      </div>
+      <div class="developer-stats">
+        ${this.developerStat("Generated Length", `${caught.lengthCm} cm`, `${species.minLengthCm}-${species.maxLengthCm} cm range`)}
+        ${this.developerStat("Generated Weight", formatFishWeight(caught.weightG), `${formatFishWeight(species.minWeightG)}-${formatFishWeight(species.maxWeightG)} range`)}
+        ${this.developerStat("Value", `${caught.value} shells`, `${species.baseValue} base`)}
+        ${this.developerStat("Depth", `${species.minDepth}-${species.maxDepth} m`, `${species.preferredDepth} preferred`)}
+        ${this.developerStat("Bite Chance", `${species.biteChanceModifier.toFixed(2)}x`, "species modifier")}
+        ${this.developerStat("Hook Window", `${species.hookWindowModifier.toFixed(2)}x`, "species modifier")}
+        ${this.developerStat("Stamina", fight.stamina.toFixed(2), "fight stat")}
+        ${this.developerStat("Strength", fight.strength.toFixed(2), "fight stat")}
+        ${this.developerStat("Erraticness", fight.erraticness.toFixed(2), "fight stat")}
+        ${this.developerStat("Tension Gain", fight.baseTensionGain.toFixed(2), "fight stat")}
+        ${this.developerStat("Resistance", fight.progressResistance.toFixed(2), "reel progress")}
+      </div>
+    `;
+  }
+
+  private developerStat(label: string, value: string, detail: string): string {
+    return `
+      <div class="developer-stat">
+        <span>${label}</span>
+        <strong>${value}</strong>
+        <small>${detail}</small>
+      </div>
+    `;
+  }
+
+  private formatChance(chance: number): string {
+    const percent = chance * 100;
+    if (percent > 0 && percent < 0.1) {
+      return "<0.1%";
+    }
+
+    return `${percent.toFixed(percent >= 10 ? 0 : 1)}%`;
   }
 
   private positionPlayerMeter(position: Vector3, camera: Camera): void {

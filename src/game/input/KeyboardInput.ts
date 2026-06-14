@@ -1,6 +1,12 @@
 export class KeyboardInput {
   private readonly keys = new Set<string>();
-  private readonly downHandler = (event: KeyboardEvent) => this.keys.add(event.code);
+  private readonly downHandler = (event: KeyboardEvent) => {
+    if (event.code === "Slash") {
+      event.preventDefault();
+    }
+
+    this.keys.add(event.code);
+  };
   private readonly upHandler = (event: KeyboardEvent) => this.keys.delete(event.code);
 
   attach(): void {

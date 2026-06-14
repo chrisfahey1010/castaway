@@ -52,6 +52,7 @@ export class Game {
   private hud: Hud | null = null;
   private autosaveTimer = 0;
   private isResetting = false;
+  private isDeveloperViewVisible = false;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     this.engine = new Engine(canvas, true, { adaptToDeviceRatio: true, stencil: true });
@@ -127,6 +128,10 @@ export class Game {
     }
 
     this.input.update(this.sceneBundle.scene, this.sceneBundle.camera);
+    if (this.input.slashPressed) {
+      this.isDeveloperViewVisible = !this.isDeveloperViewVisible;
+    }
+
     this.player.update(this.input, this.world, deltaSeconds);
     this.world.update(deltaSeconds);
     this.cameraController.update(this.player.raft.root.position, deltaSeconds);
@@ -159,7 +164,8 @@ export class Game {
       collectionLog: this.state.collectionLog.entries,
       progression: this.state.progression,
       playerPosition: this.player.raft.root.position,
-      camera: this.sceneBundle.camera
+      camera: this.sceneBundle.camera,
+      developerViewVisible: this.isDeveloperViewVisible
     });
 
     this.state.player.position = this.player.raft.root.position.clone();
