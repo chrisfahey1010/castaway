@@ -3,7 +3,7 @@ import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { BaitDepth, BaitType, FishingLine, Rod } from "../data/equipment";
 import { fishSpecies, getFishSpriteUrl } from "../data/fishSpecies";
 import type { FishingZone } from "../data/fishingZones";
-import type { FishingSnapshot } from "../fishing/FishingSystem";
+import type { FishingSnapshot, HookedFishSnapshot } from "../fishing/FishingSystem";
 import type { RaftControlInput } from "../input/InputManager";
 import type { CaughtFish } from "../inventory/Inventory";
 import type { FishCollectionEntry } from "../inventory/CollectionLog";
@@ -13,6 +13,8 @@ import { promptForFishing } from "./FishingUI";
 import { formatFishWeight } from "./formatters";
 import { renderInventory } from "./InventoryUI";
 import { Toasts } from "./Toasts";
+
+const LOST_HOOKED_FISH_CARD_SECONDS = 2;
 
 export interface HudState {
   zone: FishingZone | null;
@@ -71,6 +73,8 @@ export class Hud {
   private baitTypeOptionsKey = "";
   private baitDepthOptionsKey = "";
   private helpMode: "start" | "reset" = "reset";
+  private retainedHookedFish: HookedFishSnapshot | null = null;
+  private retainedHookedFishUntil = 0;
 
   constructor(
     root: HTMLElement,
@@ -335,11 +339,12 @@ export class Hud {
   private updateDeveloperCard(state: HudState): void {
     this.developerCard.classList.toggle("visible", state.developerViewVisible);
     this.developerCard.setAttribute("aria-hidden", String(!state.developerViewVisible));
+    const hookedFish = this.resolveDeveloperHookedFish(state);
+
     if (!state.developerViewVisible) {
       return;
     }
 
-    const hookedFish = state.fishing.hookedFish;
     if (!hookedFish) {
       const possibleFish = state.fishing.possibleFish;
       if (possibleFish.length > 0) {
@@ -393,6 +398,29 @@ export class Hud {
         ${this.developerStat("Resistance", fight.progressResistance.toFixed(2), "reel progress")}
       </div>
     `;
+  }
+
+  private resolveDeveloperHookedFish(state: HudState): HookedFishSnapshot | null {
+    const now = performance.now();
+    if (state.fishing.hookedFish) {
+      this.retainedHookedFish = state.fishing.hookedFish;
+      this.retainedHookedFishUntil = 0;
+      return state.fishing.hookedFish;
+    }
+
+    if (state.fishing.state === "escaped" && this.retainedHookedFish) {
+      if (this.retainedHookedFishUntil === 0) {
+        this.retainedHookedFishUntil = now + LOST_HOOKED_FISH_CARD_SECONDS * 1000;
+      }
+
+      if (now < this.retainedHookedFishUntil) {
+        return this.retainedHookedFish;
+      }
+    }
+
+    this.retainedHookedFish = null;
+    this.retainedHookedFishUntil = 0;
+    return null;
   }
 
   private developerStat(label: string, value: string, detail: string): string {
