@@ -19,16 +19,21 @@ export type FishFightResult = "fighting" | "caught" | "snapped" | "escaped";
 
 const CATCH_LINE_LENGTH = 2.4;
 const EXTRA_FIGHT_LINE = 34;
+const REFERENCE_STRENGTH = 1.07;
+const REFERENCE_WEIGHT_G = 3550;
+const REFERENCE_PROGRESS_RESISTANCE = 1.18;
+const PROGRESS_RESISTANCE_STRENGTH_BLEND = 0.75;
+const PROGRESS_RESISTANCE_WEIGHT_LOG_SCALE_G = 100;
 const MIN_PROGRESS_RESISTANCE = 0.35;
 
-// Calibrated based on reference data of a fight I considered 'fair' at one point
+// Calibrated based on a stats from a fish fight I considered fair at one point
 export function calculateProgressResistance(strength: number, weightG: number): number {
-  const strengthFactor = Math.max(0, strength) / 1.07;
-  const weightFactor = Math.log10(1 + Math.max(0, weightG) / 100) /
-    Math.log10(1 + 3550 / 100);
-  const resistance = 1.18 * (
-    strengthFactor * 0.75 +
-    weightFactor * (1 - 0.75)
+  const strengthFactor = Math.max(0, strength) / REFERENCE_STRENGTH;
+  const weightFactor = Math.log10(1 + Math.max(0, weightG) / PROGRESS_RESISTANCE_WEIGHT_LOG_SCALE_G) /
+    Math.log10(1 + REFERENCE_WEIGHT_G / PROGRESS_RESISTANCE_WEIGHT_LOG_SCALE_G);
+  const resistance = REFERENCE_PROGRESS_RESISTANCE * (
+    strengthFactor * PROGRESS_RESISTANCE_STRENGTH_BLEND +
+    weightFactor * (1 - PROGRESS_RESISTANCE_STRENGTH_BLEND)
   );
 
   return Math.max(MIN_PROGRESS_RESISTANCE, resistance);
