@@ -22,7 +22,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 3,
     biteChanceModifier: 1.45,
     hookWindowModifier: 1.35,
-    fight: { stamina: 0.55, strength: 0.45, erraticness: 0.2, baseTensionGain: 0.13 },
+    fight: { stamina: 0.55, strength: 0.45, erraticness: 0.2 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/lagoon_minnow.png",
     color: "#bfefff"
@@ -48,7 +48,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 5,
     biteChanceModifier: 1.25,
     hookWindowModifier: 1.16,
-    fight: { stamina: 0.7, strength: 0.55, erraticness: 0.36, baseTensionGain: 0.16 },
+    fight: { stamina: 0.7, strength: 0.55, erraticness: 0.36 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/silver_sardine.png",
     color: "#d6f7ff"
@@ -74,7 +74,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 8,
     biteChanceModifier: 1.05,
     hookWindowModifier: 1.08,
-    fight: { stamina: 0.85, strength: 0.7, erraticness: 0.48, baseTensionGain: 0.2 },
+    fight: { stamina: 0.85, strength: 0.7, erraticness: 0.48 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/blue_tang.png",
     color: "#2f8cff"
@@ -100,7 +100,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 16,
     biteChanceModifier: 0.82,
     hookWindowModifier: 0.96,
-    fight: { stamina: 1.05, strength: 0.9, erraticness: 0.45, baseTensionGain: 0.26 },
+    fight: { stamina: 1.05, strength: 0.9, erraticness: 0.45 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/parrotfish.png",
     color: "#34d27d"
@@ -126,7 +126,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 24,
     biteChanceModifier: 0.72,
     hookWindowModifier: 0.9,
-    fight: { stamina: 1.2, strength: 1.07, erraticness: 0.42, baseTensionGain: 0.35 },
+    fight: { stamina: 1.2, strength: 1.07, erraticness: 0.42 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/red_snapper.png",
     color: "#ff5b52"
@@ -152,7 +152,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 18,
     biteChanceModifier: 0.78,
     hookWindowModifier: 0.78,
-    fight: { stamina: 1.0, strength: 0.82, erraticness: 0.86, baseTensionGain: 0.28 },
+    fight: { stamina: 1.0, strength: 0.82, erraticness: 0.86 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/needlefish.png",
     color: "#9af2d0"
@@ -178,7 +178,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 54,
     biteChanceModifier: 0.36,
     hookWindowModifier: 0.72,
-    fight: { stamina: 1.45, strength: 1.45, erraticness: 0.92, baseTensionGain: 0.42 },
+    fight: { stamina: 1.45, strength: 1.45, erraticness: 0.92 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/barracuda.png",
     color: "#6f8593"
@@ -204,7 +204,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 72,
     biteChanceModifier: 0.3,
     hookWindowModifier: 0.66,
-    fight: { stamina: 1.7, strength: 1.28, erraticness: 0.78, baseTensionGain: 0.4 },
+    fight: { stamina: 1.7, strength: 1.28, erraticness: 0.78 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/mahi_mahi.png",
     color: "#35e2b5"
@@ -230,7 +230,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 7,
     biteChanceModifier: 1.12,
     hookWindowModifier: 1.08,
-    fight: { stamina: 0.78, strength: 0.62, erraticness: 0.4, baseTensionGain: 0.18 },
+    fight: { stamina: 0.78, strength: 0.62, erraticness: 0.4 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/yellow_goatfish.png",
     color: "#f5d64a"
@@ -256,7 +256,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 22,
     biteChanceModifier: 0.68,
     hookWindowModifier: 0.82,
-    fight: { stamina: 1.22, strength: 0.88, erraticness: 0.9, baseTensionGain: 0.27 },
+    fight: { stamina: 1.22, strength: 0.88, erraticness: 0.9 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/bonefish.png",
     color: "#d8e8e6"
@@ -282,7 +282,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 9,
     biteChanceModifier: 0.98,
     hookWindowModifier: 1.04,
-    fight: { stamina: 0.82, strength: 0.58, erraticness: 0.54, baseTensionGain: 0.18 },
+    fight: { stamina: 0.82, strength: 0.58, erraticness: 0.54 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/moorish_idol.png",
     color: "#ffe169"
@@ -308,7 +308,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 20,
     biteChanceModifier: 0.76,
     hookWindowModifier: 0.88,
-    fight: { stamina: 1.04, strength: 1.0, erraticness: 0.64, baseTensionGain: 0.3 },
+    fight: { stamina: 1.04, strength: 1.0, erraticness: 0.64 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/picasso_triggerfish.png",
     color: "#5bb6a8"
@@ -334,7 +334,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 48,
     biteChanceModifier: 0.44,
     hookWindowModifier: 0.78,
-    fight: { stamina: 1.38, strength: 1.5, erraticness: 0.5, baseTensionGain: 0.43 },
+    fight: { stamina: 1.38, strength: 1.5, erraticness: 0.5 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/coral_grouper.png",
     color: "#e85f5a"
@@ -360,7 +360,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 68,
     biteChanceModifier: 0.32,
     hookWindowModifier: 0.68,
-    fight: { stamina: 1.72, strength: 1.65, erraticness: 0.74, baseTensionGain: 0.48 },
+    fight: { stamina: 1.72, strength: 1.65, erraticness: 0.74 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/giant_trevally.png",
     color: "#7c8f9a"
@@ -386,7 +386,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 86,
     biteChanceModifier: 0.25,
     hookWindowModifier: 0.62,
-    fight: { stamina: 1.9, strength: 1.65, erraticness: 0.66, baseTensionGain: 0.6 },
+    fight: { stamina: 1.9, strength: 1.65, erraticness: 0.66 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/yellowfin_tuna.png",
     color: "#2d7fb6"
@@ -412,7 +412,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 180,
     biteChanceModifier: 0.12,
     hookWindowModifier: 0.48,
-    fight: { stamina: 2.25, strength: 2.2, erraticness: 0.82, baseTensionGain: 0.68 },
+    fight: { stamina: 2.25, strength: 2.2, erraticness: 0.82 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/blue_marlin.png",
     color: "#245fbd"
