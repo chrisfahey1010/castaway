@@ -386,7 +386,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 86,
     biteChanceModifier: 0.25,
     hookWindowModifier: 0.62,
-    fight: { stamina: 1.9, strength: 1.55, erraticness: 0.66, baseTensionGain: 0.5, progressResistance: 1.74 },
+    fight: { stamina: 1.9, strength: 1.65, erraticness: 0.66, baseTensionGain: 0.6, progressResistance: 1.74 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/yellowfin_tuna.png",
     color: "#2d7fb6"
@@ -412,7 +412,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 180,
     biteChanceModifier: 0.12,
     hookWindowModifier: 0.48,
-    fight: { stamina: 2.45, strength: 2.2, erraticness: 0.82, baseTensionGain: 0.68, progressResistance: 2.2 },
+    fight: { stamina: 2.25, strength: 2.2, erraticness: 0.82, baseTensionGain: 0.68, progressResistance: 2.2 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/blue_marlin.png",
     color: "#245fbd"

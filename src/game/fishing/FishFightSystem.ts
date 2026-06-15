@@ -64,7 +64,6 @@ export class FishFightSystem {
     const pulse = Math.max(0, Math.sin(state.elapsed * (3.2 + fight.erraticness * 5))) * fight.erraticness;
     const fishPull = fight.baseTensionGain + fight.strength * 0.08 + pulse * 0.14;
     const fishRunSpeed = GAME_CONFIG.fishing.fishRunLineSpeed * fight.stamina * (0.35 + pulse * fight.strength);
-    const elitePressure = Math.max(0, fight.strength * 0.8 + fight.stamina * 0.45 + fight.baseTensionGain * 1.7 - 1.9);
     const reelSpeed = (GAME_CONFIG.fishing.reelLineSpeed * rod.reelSpeed * line.reelSpeedMultiplier) / fight.progressResistance;
     state.runIntensity = clamp(0.18 + pulse + fight.strength * 0.18, 0, 1.5);
 
@@ -84,15 +83,15 @@ export class FishFightSystem {
     const slack = state.lineLength - currentLineDistance;
     let tensionTarget = 0.14 + fishPull * 0.36;
     if (slack > 3) {
-      tensionTarget = 0.05 + fishPull * 0.12;
+      tensionTarget = 0.05 + fishPull * 0.24;
     } else if (tautness > 1) {
-      tensionTarget = 0.55 + fishPull * 0.7 + elitePressure * 1.15 + (tautness - 1) * (1.85 + elitePressure * 0.7);
+      tensionTarget = 0.55 + fishPull * 1.60 + (tautness - 1);
     } else {
-      tensionTarget += tautness * (0.25 + fight.strength * 0.11 + elitePressure * 0.9);
+      tensionTarget += tautness * (0.25 + fight.strength * 0.18);
     }
 
     if (isReeling) {
-      tensionTarget += 0.2 + fishPull * 0.48 + fight.strength * 0.065 + elitePressure * 0.72;
+      tensionTarget += 0.2 + fishPull * 0.96;
     } else {
       tensionTarget -= 0.14 * line.tensionLimitMultiplier;
     }
