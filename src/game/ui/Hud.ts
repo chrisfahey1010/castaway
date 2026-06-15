@@ -3,6 +3,7 @@ import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { BaitDepth, BaitType, FishingLine, Rod } from "../data/equipment";
 import { fishSpecies, getFishSpriteUrl } from "../data/fishSpecies";
 import type { FishingZone } from "../data/fishingZones";
+import { calculateProgressResistance } from "../fishing/FishFightSystem";
 import type { FishingSnapshot, HookedFishSnapshot } from "../fishing/FishingSystem";
 import type { RaftControlInput } from "../input/InputManager";
 import type { CaughtFish } from "../inventory/Inventory";
@@ -374,6 +375,7 @@ export class Hud {
     }
 
     const { species, catch: caught, fight, zoneName } = hookedFish;
+    const progressResistance = calculateProgressResistance(fight.strength, caught.weightG);
     this.developerCard.innerHTML = `
       <div class="developer-kicker">Developer View</div>
       <div class="developer-fish-card" style="--fish-color: ${species.color}">
@@ -395,7 +397,7 @@ export class Hud {
         ${this.developerStat("Strength", fight.strength.toFixed(2), "fight stat")}
         ${this.developerStat("Erraticness", fight.erraticness.toFixed(2), "fight stat")}
         ${this.developerStat("Tension Gain", fight.baseTensionGain.toFixed(2), "fight stat")}
-        ${this.developerStat("Resistance", fight.progressResistance.toFixed(2), "reel progress")}
+        ${this.developerStat("Resistance", progressResistance.toFixed(2), "derived from strength/weight")}
       </div>
     `;
   }

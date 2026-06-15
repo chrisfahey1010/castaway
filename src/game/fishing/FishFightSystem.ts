@@ -19,6 +19,20 @@ export type FishFightResult = "fighting" | "caught" | "snapped" | "escaped";
 
 const CATCH_LINE_LENGTH = 2.4;
 const EXTRA_FIGHT_LINE = 34;
+const MIN_PROGRESS_RESISTANCE = 0.35;
+
+// Calibrated based on reference data of a fight I considered 'fair' at one point
+export function calculateProgressResistance(strength: number, weightG: number): number {
+  const strengthFactor = Math.max(0, strength) / 1.07;
+  const weightFactor = Math.log10(1 + Math.max(0, weightG) / 100) /
+    Math.log10(1 + 3550 / 100);
+  const resistance = 1.18 * (
+    strengthFactor * 0.75 +
+    weightFactor * (1 - 0.75)
+  );
+
+  return Math.max(MIN_PROGRESS_RESISTANCE, resistance);
+}
 
 export class FishFightSystem {
   createFightStats(species: FishSpecies, weightG: number): FishFightStats {
@@ -31,8 +45,7 @@ export class FishFightSystem {
       stamina: species.fight.stamina * powerScale,
       strength: species.fight.strength * powerScale,
       erraticness: species.fight.erraticness * erraticnessScale,
-      baseTensionGain: species.fight.baseTensionGain * powerScale,
-      progressResistance: species.fight.progressResistance * powerScale
+      baseTensionGain: species.fight.baseTensionGain * powerScale
     };
   }
 
@@ -54,6 +67,7 @@ export class FishFightSystem {
   update(
     state: FishFightState,
     fight: FishFightStats,
+    fishWeightG: number,
     rod: Rod,
     line: FishingLine,
     isReeling: boolean,
@@ -64,7 +78,8 @@ export class FishFightSystem {
     const pulse = Math.max(0, Math.sin(state.elapsed * (3.2 + fight.erraticness * 5))) * fight.erraticness;
     const fishPull = fight.baseTensionGain + fight.strength * 0.08 + pulse * 0.14;
     const fishRunSpeed = GAME_CONFIG.fishing.fishRunLineSpeed * fight.stamina * (0.35 + pulse * fight.strength);
-    const reelSpeed = (GAME_CONFIG.fishing.reelLineSpeed * rod.reelSpeed * line.reelSpeedMultiplier) / fight.progressResistance;
+    const progressResistance = calculateProgressResistance(fight.strength, fishWeightG);
+    const reelSpeed = (GAME_CONFIG.fishing.reelLineSpeed * rod.reelSpeed * line.reelSpeedMultiplier) / progressResistance;
     state.runIntensity = clamp(0.18 + pulse + fight.strength * 0.18, 0, 1.5);
 
     if (isReeling) {

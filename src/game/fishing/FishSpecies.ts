@@ -8,7 +8,6 @@ export interface FishFightStats {
   strength: number;
   erraticness: number;
   baseTensionGain: number;
-  progressResistance: number;
 }
 
 export interface FishSpecies {

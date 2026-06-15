@@ -258,6 +258,7 @@ export class FishingSystem {
     const result = this.fightSystem.update(
       this.fightState,
       this.activeFight,
+      this.activeCatch.weightG,
       rod,
       line,
       input.interactDown,
