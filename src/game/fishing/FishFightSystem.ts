@@ -24,7 +24,7 @@ const REFERENCE_WEIGHT_G = 3550; // Weight used as the baseline where weight add
 const PROGRESS_RESISTANCE_STRENGTH_BLEND = 0.50; // Share of final resistance controlled by strength instead of weight.
 const PROGRESS_RESISTANCE_STRENGTH_STEP = 1.4; // Larger values make strength affect reel resistance less; smaller values make it matter more.
 const PROGRESS_RESISTANCE_WEIGHT_STEP_G = 15000; // Grams needed to shift the weight resistance factor by 1.
-const MIN_PROGRESS_RESISTANCE = 0.1; // Lower bound for reel resistance so very small/easy fish cannot reel in instantly.
+const MIN_PROGRESS_RESISTANCE = 0.5; // Lower bound for reel resistance so very small/easy fish cannot reel in instantly.
 
 export function calculateProgressResistance(strength: number, weightG: number): number {
   const strengthFactor = (Math.max(0, strength) / REFERENCE_STRENGTH) / PROGRESS_RESISTANCE_STRENGTH_STEP;
