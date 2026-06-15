@@ -17,22 +17,35 @@ export interface FishFightState {
 
 export type FishFightResult = "fighting" | "caught" | "snapped" | "escaped";
 
+export interface ProgressResistanceBreakdown {
+  strengthFactor: number;
+  weightFactor: number;
+  progressResistance: number;
+}
+
 const CATCH_LINE_LENGTH = 2.4; // Line length at which the fish is close enough to count as caught.
 const EXTRA_FIGHT_LINE = 34; // Extra line the fish can pull beyond the starting cast distance before escaping pressure caps out.
-const REFERENCE_WEIGHT_G = 3550; // Weight used as the baseline where weight adds no bonus or penalty to resistance.
 const PROGRESS_RESISTANCE_STRENGTH_BLEND = 0.50; // Share of final resistance controlled by strength instead of weight.
 const PROGRESS_RESISTANCE_STRENGTH_STEP = 2.0; // Larger values make strength affect reel resistance less; smaller values make it matter more.
-const PROGRESS_RESISTANCE_WEIGHT_STEP_G = 1000; // Grams needed to shift the weight resistance factor by 1.
+const PROGRESS_RESISTANCE_WEIGHT_STEP_G = 10000; // Grams needed to shift the weight resistance factor by 1.
 const MIN_PROGRESS_RESISTANCE = 0.5; // Lower bound for reel resistance so very small/easy fish cannot reel in instantly.
 
 export function calculateProgressResistance(strength: number, weightG: number): number {
-  const strengthFactor = Math.max(0, strength) / PROGRESS_RESISTANCE_STRENGTH_STEP;
-  const weightFactor = (Math.max(0, weightG) - REFERENCE_WEIGHT_G) / PROGRESS_RESISTANCE_WEIGHT_STEP_G;
+  return calculateProgressResistanceBreakdown(strength, weightG).progressResistance;
+}
+
+export function calculateProgressResistanceBreakdown(strength: number, weightG: number): ProgressResistanceBreakdown {
+  const strengthFactor = MIN_PROGRESS_RESISTANCE + Math.max(0, strength) / PROGRESS_RESISTANCE_STRENGTH_STEP;
+  const weightFactor = MIN_PROGRESS_RESISTANCE + Math.max(0, weightG) / PROGRESS_RESISTANCE_WEIGHT_STEP_G;
   const resistance = 
     strengthFactor * PROGRESS_RESISTANCE_STRENGTH_BLEND +
     weightFactor * (1 - PROGRESS_RESISTANCE_STRENGTH_BLEND);
 
-  return Math.max(MIN_PROGRESS_RESISTANCE, resistance);
+  return {
+    strengthFactor,
+    weightFactor,
+    progressResistance: resistance
+  };
 }
 
 export class FishFightSystem {
@@ -45,8 +58,7 @@ export class FishFightSystem {
     return {
       stamina: species.fight.stamina * powerScale,
       strength: species.fight.strength * powerScale,
-      erraticness: species.fight.erraticness * erraticnessScale,
-      baseTensionGain: species.fight.baseTensionGain * powerScale
+      erraticness: species.fight.erraticness * erraticnessScale
     };
   }
 
@@ -77,7 +89,7 @@ export class FishFightSystem {
   ): FishFightResult {
     state.elapsed += deltaSeconds;
     const pulse = Math.max(0, Math.sin(state.elapsed * (3.2 + fight.erraticness * 5))) * fight.erraticness;
-    const baseTensionGain = clamp(0.00025 * fishWeightG, 0.3, 2.4)
+    const baseTensionGain = clamp(0.00025 * fishWeightG, 0.3, 2.4);
     const fishPull = baseTensionGain + fight.strength * 0.08 + pulse * 0.14;
     const fishRunSpeed = GAME_CONFIG.fishing.fishRunLineSpeed * fight.stamina * (0.35 + pulse * fight.strength);
     const progressResistance = calculateProgressResistance(fight.strength, fishWeightG);

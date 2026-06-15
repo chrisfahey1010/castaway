@@ -292,7 +292,23 @@ button {
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.72);
 }
 
+.player-meter-resistance {
+  display: none;
+  margin-bottom: 3px;
+  color: #bff4ff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.72);
+  white-space: nowrap;
+}
+
 .player-meter-value.visible {
+  display: block;
+}
+
+.player-meter-resistance.visible {
   display: block;
 }
 

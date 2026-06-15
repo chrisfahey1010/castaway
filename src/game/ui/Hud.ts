@@ -3,7 +3,7 @@ import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { BaitDepth, BaitType, FishingLine, Rod } from "../data/equipment";
 import { fishSpecies, getFishSpriteUrl } from "../data/fishSpecies";
 import type { FishingZone } from "../data/fishingZones";
-import { calculateProgressResistance } from "../fishing/FishFightSystem";
+import { calculateProgressResistanceBreakdown } from "../fishing/FishFightSystem";
 import type { FishingSnapshot, HookedFishSnapshot } from "../fishing/FishingSystem";
 import type { RaftControlInput } from "../input/InputManager";
 import type { CaughtFish } from "../inventory/Inventory";
@@ -57,6 +57,7 @@ export class Hud {
   private readonly helpCard: HTMLElement;
   private readonly helpActionButton: HTMLButtonElement;
   private readonly playerMeterEl: HTMLElement;
+  private readonly playerMeterResistance: HTMLElement;
   private readonly playerMeterValue: HTMLElement;
   private readonly playerMeterFill: HTMLElement;
   private readonly catchCard: HTMLElement;
@@ -134,6 +135,7 @@ export class Hud {
           <button type="button" class="move-button move-right" data-move="right" aria-label="Turn right">→</button>
         </div>
         <div class="player-meter" data-player-meter aria-hidden="true">
+          <div class="player-meter-resistance" data-player-meter-resistance></div>
           <div class="player-meter-value" data-player-meter-value></div>
           <div class="meter"><div class="meter-fill" data-player-meter-fill></div></div>
         </div>
@@ -187,6 +189,7 @@ export class Hud {
     this.baitDepthSelectorEl = this.must(root, "[data-bait-depth-selector]");
     this.baitDepthToggleButton = this.must(root, "[data-bait-depth-toggle]") as HTMLButtonElement;
     this.playerMeterEl = this.must(root, "[data-player-meter]");
+    this.playerMeterResistance = this.must(root, "[data-player-meter-resistance]");
     this.playerMeterValue = this.must(root, "[data-player-meter-value]");
     this.playerMeterFill = this.must(root, "[data-player-meter-fill]");
     this.catchCard = this.must(root, "[data-catch-card]");
@@ -328,6 +331,13 @@ export class Hud {
       ? state.fishing.castPower
       : state.fishing.tension / (state.rod.tensionLimit * state.line.tensionLimitMultiplier);
     const maxTension = state.rod.tensionLimit * state.line.tensionLimitMultiplier;
+    const resistanceBreakdown = state.fishing.hookedFish
+      ? calculateProgressResistanceBreakdown(state.fishing.hookedFish.fight.strength, state.fishing.hookedFish.catch.weightG)
+      : null;
+    this.playerMeterResistance.textContent = resistanceBreakdown
+      ? `S ${resistanceBreakdown.strengthFactor.toFixed(2)} | W ${resistanceBreakdown.weightFactor.toFixed(2)} | R ${resistanceBreakdown.progressResistance.toFixed(2)}`
+      : "";
+    this.playerMeterResistance.classList.toggle("visible", state.developerViewVisible && isReeling && resistanceBreakdown !== null);
     this.playerMeterValue.textContent = `${state.fishing.tension.toFixed(2)} / ${maxTension.toFixed(2)}`;
     this.playerMeterValue.classList.toggle("visible", state.developerViewVisible && isReeling);
     this.playerMeterFill.classList.toggle("tension", isReeling);
@@ -375,7 +385,7 @@ export class Hud {
     }
 
     const { species, catch: caught, fight, zoneName } = hookedFish;
-    const progressResistance = calculateProgressResistance(fight.strength, caught.weightG);
+    const resistanceBreakdown = calculateProgressResistanceBreakdown(fight.strength, caught.weightG);
     this.developerCard.innerHTML = `
       <div class="developer-kicker">Developer View</div>
       <div class="developer-fish-card" style="--fish-color: ${species.color}">
@@ -396,8 +406,7 @@ export class Hud {
         ${this.developerStat("Stamina", fight.stamina.toFixed(2), "fight stat")}
         ${this.developerStat("Strength", fight.strength.toFixed(2), "fight stat")}
         ${this.developerStat("Erraticness", fight.erraticness.toFixed(2), "fight stat")}
-        ${this.developerStat("Tension Gain", fight.baseTensionGain.toFixed(2), "fight stat")}
-        ${this.developerStat("Resistance", progressResistance.toFixed(2), "derived from strength/weight")}
+        ${this.developerStat("Resistance", resistanceBreakdown.progressResistance.toFixed(2), "derived from strength/weight")}
       </div>
     `;
   }
