@@ -127,6 +127,10 @@ export class FishFightSystem {
 
     const tensionResponse = 1 - Math.exp(-(isReeling ? 2.8 : 2) * deltaSeconds);
     state.tension += (tensionTarget - state.tension) * tensionResponse;
+    
+    // Reduce fish's stats based on line tension
+    fight.stamina = Math.max(0, fight.stamina - state.tension * 0.00015)
+    fight.strength = Math.max(0, fight.strength - state.tension * 0.00006)
 
     const progressRange = Math.max(0.001, state.initialLineLength - state.catchLineLength);
     state.progress = clamp(1 - (state.lineLength - state.catchLineLength) / progressRange, 0, 1);
@@ -148,7 +152,7 @@ export class FishFightSystem {
       return "caught";
     }
 
-    if (state.elapsed >= GAME_CONFIG.fishing.maxFightSeconds + fight.stamina * 5) {
+    if (state.elapsed >= GAME_CONFIG.fishing.maxFightSeconds) {
       return "escaped";
     }
 
