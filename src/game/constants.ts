@@ -27,7 +27,7 @@ export const GAME_CONFIG = {
     biteMinSeconds: 1.6,
     biteMaxSeconds: 5.6,
     baseHookWindowSeconds: 1.2,
-    maxFightSeconds: 30
+    maxFightSeconds: 60
   },
   camera: {
     height: 90,
