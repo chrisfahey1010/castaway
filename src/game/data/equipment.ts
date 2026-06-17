@@ -35,7 +35,7 @@ export const rods: Rod[] = [
     castDistanceMultiplier: 0.85,
     hookWindowModifier: 0.8,
     tensionLimit: 0.9,
-    reelSpeed: 0.26
+    reelSpeed: 0.20
   },
   {
     id: "bamboo-rod",
@@ -43,7 +43,7 @@ export const rods: Rod[] = [
     castDistanceMultiplier: 1,
     hookWindowModifier: 1,
     tensionLimit: 1,
-    reelSpeed: 0.34
+    reelSpeed: 0.31
   },
   {
     id: "reinforced-rod",
