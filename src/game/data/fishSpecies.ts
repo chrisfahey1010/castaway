@@ -386,7 +386,7 @@ export const fishSpecies: FishSpecies[] = [
     baseValue: 86,
     biteChanceModifier: 0.25,
     hookWindowModifier: 0.62,
-    fight: { stamina: 1.9, strength: 1.65, erraticness: 0.66 },
+    fight: { stamina: 1.9, strength: 1.85, erraticness: 0.66 },
     spriteKey: "fishShadow",
     spriteUrl: "/assets/sprites/fish/yellowfin_tuna.png",
     color: "#2d7fb6"
