@@ -15,3 +15,9 @@ pnpm-debug.log*
 .idea/
 AGENTS.md
 implementation_plan.md
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
