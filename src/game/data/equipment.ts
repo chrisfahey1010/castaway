@@ -16,7 +16,7 @@ export interface FishingLine {
 }
 
 export type BaitDepthId = "shallow" | "medium" | "deep";
-export type BaitTypeId = "pork" | "coconut-grub" | "hermit-crab-bits" | "questionable-seaweed";
+export type BaitTypeId = "kelp" | "grub" | "shrimp" | "pork";
 
 export interface BaitDepth {
   id: BaitDepthId;
@@ -85,15 +85,15 @@ export const startingFishingLine = fishingLines[0];
 
 export const baitTypes: BaitType[] = [
   {
-    id: "questionable-seaweed",
+    id: "kelp",
     name: "Kelp"
   },
   {
-    id: "coconut-grub",
+    id: "grub",
     name: "Grub"
   },
   {
-    id: "hermit-crab-bits",
+    id: "shrimp",
     name: "Shrimp"
   },
   {

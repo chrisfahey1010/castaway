@@ -21,9 +21,9 @@ export interface ProgressionUnlock {
 }
 
 const baitUnlockRequirements: Partial<Record<BaitTypeId, BaitTypeId>> = {
-  "coconut-grub": "questionable-seaweed",
-  "hermit-crab-bits": "coconut-grub",
-  pork: "hermit-crab-bits"
+  grub: "kelp",
+  shrimp: "grub",
+  pork: "shrimp"
 };
 
 const depthUnlockRequirements: Partial<Record<BaitDepthId, BaitDepthId>> = {
@@ -36,9 +36,9 @@ export class ProgressionState {
   catchesAtLeast3000G = 0;
   uniqueSpeciesCaught = 0;
   catchesByBait: Record<BaitTypeId, number> = {
-    "questionable-seaweed": 0,
-    "coconut-grub": 0,
-    "hermit-crab-bits": 0,
+    kelp: 0,
+    grub: 0,
+    shrimp: 0,
     pork: 0
   };
   catchesByDepth: Record<BaitDepthId, number> = {
@@ -186,7 +186,7 @@ export class ProgressionState {
       .filter((line) => line.id !== "light-line" && this.isLineUnlocked(line.id))
       .map((line) => ({ kind: "line" as const, name: line.name }));
     const baitUnlocks = baitTypes
-      .filter((baitType) => baitType.id !== "questionable-seaweed" && this.isBaitTypeUnlocked(baitType.id))
+      .filter((baitType) => baitType.id !== "kelp" && this.isBaitTypeUnlocked(baitType.id))
       .map((baitType) => ({ kind: "bait" as const, name: baitType.name }));
     const depthUnlocks = baitDepths
       .filter((depth) => depth.id !== "shallow" && this.isBaitDepthUnlocked(depth.id))

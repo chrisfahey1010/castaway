@@ -1,7 +1,7 @@
 import type { GameState, SaveGame } from "./GameState";
 
-const LEGACY_SAVE_KEYS = ["castaway.save.v1", "castaway.save.v2"];
-const SAVE_KEY = "castaway.save.v3";
+const LEGACY_SAVE_KEYS = ["castaway.save.v1", "castaway.save.v2", "castaway.save.v3"];
+const SAVE_KEY = "castaway.save.v4";
 
 export class SaveManager {
   load(state: GameState): boolean {
