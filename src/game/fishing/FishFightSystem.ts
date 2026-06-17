@@ -152,7 +152,7 @@ export class FishFightSystem {
       return "caught";
     }
 
-    if (state.elapsed >= GAME_CONFIG.fishing.maxFightSeconds / (1 + fight.erraticness) {
+    if (state.elapsed >= GAME_CONFIG.fishing.maxFightSeconds / (1 + fight.erraticness)) {
       return "escaped";
     }
 
