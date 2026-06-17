@@ -90,7 +90,7 @@ export class FishFightSystem {
     state.elapsed += deltaSeconds;
     const pulse = Math.max(0, Math.sin(state.elapsed * (3.2 + fight.erraticness * 5))) * fight.erraticness;
     const baseTensionGain = clamp(0.00025 * fishWeightG, 0.3, 2.4);
-    const fishPull = baseTensionGain + fight.strength * 0.07 + pulse * 0.18;
+    const fishPull = baseTensionGain + fight.strength * 0.07 + pulse * 0.28;
     const fishRunSpeed = GAME_CONFIG.fishing.fishRunLineSpeed * fight.stamina * (0.35 + pulse * fight.strength) / (1 + state.tension);
     const progressResistance = calculateProgressResistance(fight.strength, fishWeightG);
     const reelSpeed = (GAME_CONFIG.fishing.reelLineSpeed * rod.reelSpeed * line.reelSpeedMultiplier) / progressResistance;
