@@ -1,6 +1,6 @@
 # Castaway
 
-Castaway is a browser fishing game built with TypeScript, Vite, and BabylonJS. You pilot a raft around a tropical island, cast into different water zones, catch fish, unlock better equipment, and fill out a collection log.
+Castaway is a browser fishing game built with TypeScript, Vite, and BabylonJS. You pilot a raft around a desert island, cast into different water zones, catch fish, unlock better equipment, and fill out your fish collection.
 
 ## Features
 
