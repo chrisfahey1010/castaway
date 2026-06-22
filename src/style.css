@@ -895,7 +895,8 @@ button {
     transform: translateX(-50%);
   }
 
-  .help-card {
+  .help-card,
+  .help-card.start-mode {
     top: max(10px, env(safe-area-inset-top));
     right: max(10px, env(safe-area-inset-right));
     bottom: max(10px, env(safe-area-inset-bottom));
@@ -905,6 +906,8 @@ button {
     transform: none;
     padding: 13px 14px;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .drawer h2,
